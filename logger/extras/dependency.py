@@ -41,7 +41,7 @@ class DependencyManager:
         self._last_update = now
         return info
 
-def logger_log_environment(self: Logger, level: str = 'INFO') -> None:
+def logger_log_environment(self: Logger, level: str = 'INFO', return_block: bool = False) -> str | None:
     info = self._dep_manager.get_environment_info()
     log_method = getattr(self, level.lower())
     linhas = [
@@ -54,4 +54,6 @@ def logger_log_environment(self: Logger, level: str = 'INFO') -> None:
         if pkg in info['packages']:
             linhas.append(f"  - {pkg}: {info['packages'][pkg]}")
     bloco = format_block("🔧 AMBIENTE", linhas)
+    if return_block:
+        return bloco
     log_method(f"\n{bloco}")

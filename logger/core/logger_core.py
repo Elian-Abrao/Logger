@@ -1,5 +1,6 @@
 import logging
 from logging import Logger, Formatter, StreamHandler, FileHandler
+from logger.handlers import ProgressStreamHandler
 from pathlib import Path
 from datetime import datetime
 from colorama import init
@@ -7,7 +8,7 @@ import os
 from logger.formatters.custom import CustomFormatter, AutomaticTracebackLogger, _define_custom_levels
 import sys
 from logger.core.context import _setup_context_and_profiling
-from logger.extras.progress import format_block, logger_progress
+from logger.extras.progress import format_block, logger_progress, combine_blocks
 from logger.extras.network import _setup_dependencies_and_network
 from logger.extras.printing import logger_capture_prints
 import time
@@ -26,7 +27,7 @@ from wcwidth import wcswidth
 
 try:
     import pyautogui
-except ImportError:
+except Exception:
     pyautogui = None
 
 # Inicializa o módulo colorama para permitir a exibição de cores no console do Windows.
@@ -57,23 +58,26 @@ def _log_start(self: Logger, verbose: int = 1, timeout: float = 1.0):
         f"Script: {script} • Pasta: {folder}"
     ]
     banner = format_block("🚦INÍCIO", linhas)
-    self.success(f"\n{banner}")
-    
+
+    blocks = [banner]
+
     # Reseta métricas para começar do zero (rápido e útil sempre)
     if verbose >= 1:
         self.reset_metrics()
     
     # Informações adicionais baseadas no nível verbose
     if verbose >= 1:
-        # Registra o estado do sistema (operação leve)
-        self.log_system_status()
-        # Registra informações do ambiente (operação leve)
-        self.log_environment()
+        status_block = self.log_system_status(return_block=True)
+        env_block = self.log_environment(return_block=True)
+        blocks.extend([status_block, env_block])
     
     if verbose >= 2:
         # Snapshot de memória (pode ser pesado em sistemas grandes)
         self.debug("Registrando snapshot inicial de memória...")
         self.memory_snapshot()
+
+    banner_final = combine_blocks(blocks)
+    self.success(f"\n{banner_final}")
 
 
 def _log_end(self: Logger, verbose: int = 1, timeout: float = 1.0):
@@ -102,9 +106,10 @@ def _log_end(self: Logger, verbose: int = 1, timeout: float = 1.0):
         self.debug("Verificando possíveis vazamentos de memória...")
         self.check_memory_leak()
     
+    blocks = []
     if verbose >= 1:
-        # Registra o estado final do sistema (operação leve)
-        self.log_system_status()
+        status_block = self.log_system_status(return_block=True)
+        blocks.append(status_block)
     
     # Banner de finalização
     linhas = [
@@ -113,19 +118,20 @@ def _log_end(self: Logger, verbose: int = 1, timeout: float = 1.0):
         f"Script: {script} • Pasta: {folder}"
     ]
     banner = format_block("🏁 FIM", linhas)
-    self.success(f"\n{banner}")
+    blocks.insert(0, banner)
+    banner_final = combine_blocks(blocks)
+    self.success(f"\n{banner_final}")
 
-def _setup_directories(base_dir: Path, split_debug: bool):
+def _setup_directories(base_dir: Path):
     """
     Cria e configura a estrutura de diretórios necessária para o sistema de logging.
     
     Parâmetros:
         base_dir (Path): Diretório base onde os logs serão armazenados
-        split_debug (bool): Se True, cria um diretório separado para logs de debug
     
     Cria os seguintes diretórios:
     - Logs: Diretório principal para todos os logs
-    - LogsDEBUG: Diretório opcional para logs de debug (se split_debug=True)
+    - LogsDEBUG: Diretório para logs completos de depuração
     - PrintScreens: Diretório para armazenar capturas de tela
     
     Retorna:
@@ -135,8 +141,7 @@ def _setup_directories(base_dir: Path, split_debug: bool):
     debug_dir  = base_dir / 'LogsDEBUG'
     base_dir.mkdir(parents=True, exist_ok=True)
     screen_dir.mkdir(parents=True, exist_ok=True)
-    if split_debug:
-        debug_dir.mkdir(parents=True, exist_ok=True)
+    debug_dir.mkdir(parents=True, exist_ok=True)
     return screen_dir, debug_dir
 
 def _get_log_filename(name: str) -> str:
@@ -472,7 +477,7 @@ class SystemMonitor:
 
 
 # Funções de monitoramento para o logger
-def logger_log_system_status(self: Logger, level: str = 'INFO') -> None:
+def logger_log_system_status(self: Logger, level: str = 'INFO', return_block: bool = False) -> str | None:
     proc_mem, sys_mem = self._monitor.get_memory_usage()
     proc_cpu, sys_cpu = self._monitor.get_cpu_usage()
     
@@ -481,6 +486,9 @@ def logger_log_system_status(self: Logger, level: str = 'INFO') -> None:
         f"💾 Memória: {proc_mem:.1f}MB • Sistema: {sys_mem:.1f}%"
     ]
     bloco = format_block("🧠 STATUS DO SISTEMA", linhas)
+
+    if return_block:
+        return bloco
 
     getattr(self, level.lower())(f"\n{bloco}")
 
@@ -662,7 +670,7 @@ class NetworkMonitor:
             }
 
 # Funções de dependências e rede para o logger
-def logger_log_environment(self: Logger, level: str = 'INFO') -> None:
+def logger_log_environment(self: Logger, level: str = 'INFO', return_block: bool = False) -> str | None:
     """
     Registra informações detalhadas sobre o ambiente de execução.
     
@@ -687,6 +695,8 @@ def logger_log_environment(self: Logger, level: str = 'INFO') -> None:
             linhas.append(f"  - {pkg}: {info['packages'][pkg]}")
 
     bloco = format_block("🔧 AMBIENTE", linhas)
+    if return_block:
+        return bloco
     log_method(f"\n{bloco}")
 
 def logger_check_connectivity(self: Logger, url: str = None, level: str = 'INFO', timeout: float = 1.0) -> None:
@@ -790,14 +800,13 @@ def logger_sleep(self: Logger, duration: float, unit: str = 's', level: str = 'D
     
     return None
 
-def _configure_base_logger(name: str, log_dir: str, split_debug: bool, console_level: str = 'INFO', file_level: str = 'DEBUG') -> Logger:
+def _configure_base_logger(name: str, log_dir: str, console_level: str = 'INFO', file_level: str = 'DEBUG') -> Logger:
     """
     Configura as funcionalidades base do logger.
     
     Args:
         name: Nome base para o logger e arquivos de log
         log_dir: Diretório base para armazenar os logs
-        split_debug: Se True, separa logs de debug em arquivo próprio
 
         console_level: Nível de log para o console (padrão: 'INFO')
         file_level: Nível de log para o arquivo (padrão: 'DEBUG')
@@ -812,10 +821,9 @@ def _configure_base_logger(name: str, log_dir: str, split_debug: bool, console_l
 
     # Converte as strings de níveis para constantes do logging
     console_level_value = getattr(logging, console_level)
-    file_level_value = getattr(logging, file_level)
 
     base = Path(log_dir)
-    screen_dir, debug_dir = _setup_directories(base, split_debug)
+    screen_dir, debug_dir = _setup_directories(base)
     filename = _get_log_filename(name)
 
     logging.setLoggerClass(AutomaticTracebackLogger)
@@ -834,27 +842,21 @@ def _configure_base_logger(name: str, log_dir: str, split_debug: bool, console_l
     )
 
     # Console handler (colorido)
-    ch = StreamHandler()
+    ch = ProgressStreamHandler()
     ch.setFormatter(CustomFormatter(fmt=console_fmt, datefmt=datefmt, style='{'))
     logger.addHandler(ch)
 
     # File handlers (sem cores ANSI)
     formatter = Formatter(fmt=file_fmt, datefmt=datefmt, style='{')
-    if split_debug:
-        fh_dbg = FileHandler(debug_dir / filename, encoding='utf-8')
-        fh_dbg.setLevel(logging.DEBUG)
-        fh_dbg.setFormatter(formatter)
-        logger.addHandler(fh_dbg)
+    fh_dbg = FileHandler(debug_dir / filename, encoding='utf-8')
+    fh_dbg.setLevel(logging.DEBUG)
+    fh_dbg.setFormatter(formatter)
+    logger.addHandler(fh_dbg)
 
-        fh_info = FileHandler(base / filename, encoding='utf-8')
-        fh_info.setLevel(logging.INFO)
-        fh_info.setFormatter(formatter)
-        logger.addHandler(fh_info)
-    else:
-        fh = FileHandler(base / filename, encoding='utf-8')
-        fh.setLevel(file_level_value)
-        fh.setFormatter(formatter)
-        logger.addHandler(fh)
+    fh_info = FileHandler(base / filename, encoding='utf-8')
+    fh_info.setLevel(logging.INFO)
+    fh_info.setFormatter(formatter)
+    logger.addHandler(fh_info)
 
     
     # Métodos extras
@@ -875,7 +877,9 @@ def _configure_base_logger(name: str, log_dir: str, split_debug: bool, console_l
 
     # Armazena caminho do arquivo de log atual no logger
     file_path = base / filename
+    debug_path = debug_dir / filename
     setattr(logger, 'log_path', str(file_path))
+    setattr(logger, 'debug_log_path', str(debug_path))
 
     # Método cleanup para limpar o console
     def _cleanup(self: Logger) -> None:
@@ -894,6 +898,11 @@ def _configure_base_logger(name: str, log_dir: str, split_debug: bool, console_l
         """
         return getattr(self, 'log_path', None)
     setattr(Logger, 'path', _path)
+
+    def _debug_path(self: Logger) -> str:
+        return getattr(self, 'debug_log_path', None)
+    setattr(Logger, 'debug_path', _debug_path)
+
 
     # Método para pausar a execução com um input
     def _pause(self: Logger, msg: str = "Digite algo para continuar... ") -> str:
@@ -922,7 +931,6 @@ def _setup_utility_functions(logger: Logger) -> None:
 def start_logger(
     name: str = None,
     log_dir: str = 'Logs',
-    split_debug: bool = False,
     console_level: str = 'INFO',
     file_level: str = 'DEBUG',
     capture_prints: bool = True,
@@ -933,7 +941,6 @@ def start_logger(
     Args:
         name: Nome base para o logger e arquivos de log (opcional)
         log_dir: Diretório base para armazenar os logs (padrão: 'Logs')
-        split_debug: Se True, separa logs de debug em arquivo próprio (padrão: False)
         console_level: Nível de log para o console (padrão: 'INFO')
         file_level: Nível de log para o arquivo (padrão: 'DEBUG')
         capture_prints: Habilita captura das chamadas ao print
@@ -947,7 +954,7 @@ def start_logger(
         logger.info('Iniciando processamento...')
         logger.end()
     """
-    logger = _configure_base_logger(name, log_dir, split_debug, console_level, file_level)
+    logger = _configure_base_logger(name, log_dir, console_level, file_level)
     _setup_metrics(logger)
     _setup_monitoring(logger)
     _setup_context_and_profiling(logger)
@@ -957,14 +964,13 @@ def start_logger(
         logger.capture_prints(True)
     return logger
 
-def _configure_base_logger(name: str, log_dir: str, split_debug: bool, console_level: str = 'INFO', file_level: str = 'DEBUG') -> Logger:
+def _configure_base_logger(name: str, log_dir: str, console_level: str = 'INFO', file_level: str = 'DEBUG') -> Logger:
     """
     Configura as funcionalidades base do logger.
     
     Args:
         name: Nome base para o logger e arquivos de log
         log_dir: Diretório base para armazenar os logs
-        split_debug: Se True, separa logs de debug em arquivo próprio
         console_level: Nível de log para o console (padrão: 'INFO')
         file_level: Nível de log para o arquivo (padrão: 'DEBUG')
     
@@ -976,10 +982,9 @@ def _configure_base_logger(name: str, log_dir: str, split_debug: bool, console_l
 
     # Converte as strings de níveis para constantes do logging
     console_level_value = getattr(logging, console_level)
-    file_level_value = getattr(logging, file_level)
 
     base = Path(log_dir)
-    screen_dir, debug_dir = _setup_directories(base, split_debug)
+    screen_dir, debug_dir = _setup_directories(base)
     filename = _get_log_filename(name)
 
     logging.setLoggerClass(AutomaticTracebackLogger)
@@ -998,27 +1003,21 @@ def _configure_base_logger(name: str, log_dir: str, split_debug: bool, console_l
     )
 
     # Console handler (colorido)
-    ch = StreamHandler()
+    ch = ProgressStreamHandler()
     ch.setFormatter(CustomFormatter(fmt=console_fmt, datefmt=datefmt, style='{'))
     logger.addHandler(ch)
 
     # File handlers (sem cores ANSI)
     formatter = Formatter(fmt=file_fmt, datefmt=datefmt, style='{')
-    if split_debug:
-        fh_dbg = FileHandler(debug_dir / filename, encoding='utf-8')
-        fh_dbg.setLevel(logging.DEBUG)
-        fh_dbg.setFormatter(formatter)
-        logger.addHandler(fh_dbg)
+    fh_dbg = FileHandler(debug_dir / filename, encoding='utf-8')
+    fh_dbg.setLevel(logging.DEBUG)
+    fh_dbg.setFormatter(formatter)
+    logger.addHandler(fh_dbg)
 
-        fh_info = FileHandler(base / filename, encoding='utf-8')
-        fh_info.setLevel(logging.INFO)
-        fh_info.setFormatter(formatter)
-        logger.addHandler(fh_info)
-    else:
-        fh = FileHandler(base / filename, encoding='utf-8')
-        fh.setLevel(file_level_value)
-        fh.setFormatter(formatter)
-        logger.addHandler(fh)
+    fh_info = FileHandler(base / filename, encoding='utf-8')
+    fh_info.setLevel(logging.INFO)
+    fh_info.setFormatter(formatter)
+    logger.addHandler(fh_info)
 
     
     # Métodos extras
@@ -1039,7 +1038,9 @@ def _configure_base_logger(name: str, log_dir: str, split_debug: bool, console_l
 
     # Armazena caminho do arquivo de log atual no logger
     file_path = base / filename
+    debug_path = debug_dir / filename
     setattr(logger, 'log_path', str(file_path))
+    setattr(logger, 'debug_log_path', str(debug_path))
 
     # Método cleanup para limpar o console
     def _cleanup(self: Logger) -> None:
@@ -1058,6 +1059,9 @@ def _configure_base_logger(name: str, log_dir: str, split_debug: bool, console_l
         """
         return getattr(self, 'log_path', None)
     setattr(Logger, 'path', _path)
+    def _debug_path(self: Logger) -> str:
+        return getattr(self, 'debug_log_path', None)
+    setattr(Logger, 'debug_path', _debug_path)
 
     # Método para pausar a execução com um input
     def _pause(self: Logger, msg: str = "Digite algo para continuar... ") -> str:
