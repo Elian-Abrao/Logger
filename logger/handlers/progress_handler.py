@@ -11,4 +11,3 @@ class ProgressStreamHandler(StreamHandler):
         super().emit(record)
         if pbar and not pbar.closed:
             pbar._print_progress()
-
