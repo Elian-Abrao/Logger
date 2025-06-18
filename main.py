@@ -4,7 +4,7 @@ from logger import start_logger
 
 
 def main():
-    logger = start_logger("Demo", split_debug=True)
+    logger = start_logger("Demo")
     logger.start()
     logger.info("Processo iniciado")
     with logger.context("Etapa"):  # from context module via start_logger
