@@ -10,7 +10,7 @@ from wcwidth import wcswidth
 # ---- Funcoes auxiliares ----
 
 def format_block(title: str, lines):
-    space = " " * 36
+    space = " " * 2
     title_str = f"[{title}]"
     title_w = wcswidth(title_str)
     content_ws = [wcswidth(line) for line in lines] if lines else [0]

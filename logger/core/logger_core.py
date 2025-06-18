@@ -77,7 +77,7 @@ def _log_start(self: Logger, verbose: int = 1, timeout: float = 1.0):
         self.memory_snapshot()
 
     banner_final = combine_blocks(blocks)
-    self.success(f"\n{banner_final}")
+    self.success(f"\n{banner_final}", extra={'plain': True})
 
 
 def _log_end(self: Logger, verbose: int = 1, timeout: float = 1.0):
@@ -120,7 +120,7 @@ def _log_end(self: Logger, verbose: int = 1, timeout: float = 1.0):
     banner = format_block("🏁 FIM", linhas)
     blocks.insert(0, banner)
     banner_final = combine_blocks(blocks)
-    self.success(f"\n{banner_final}")
+    self.success(f"\n{banner_final}", extra={'plain': True})
 
 def _setup_directories(base_dir: Path):
     """

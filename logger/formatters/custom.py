@@ -51,6 +51,8 @@ class CustomFormatter(Formatter):
     }
 
     def format(self, record):
+        if getattr(record, 'plain', False):
+            return record.getMessage()
         record.emoji = self.LEVEL_EMOJI.get(record.levelname, '🔹')
         color = self.LEVEL_COLOR.get(record.levelname, '')
         record.levelname_color = f"{color}[{record.levelname}]{Style.RESET_ALL}"
