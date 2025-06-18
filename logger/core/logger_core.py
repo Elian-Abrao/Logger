@@ -798,8 +798,11 @@ def _configure_base_logger(name: str, log_dir: str, split_debug: bool, console_l
         name: Nome base para o logger e arquivos de log
         log_dir: Diretório base para armazenar os logs
         split_debug: Se True, separa logs de debug em arquivo próprio
+
         console_level: Nível de log para o console (padrão: 'INFO')
         file_level: Nível de log para o arquivo (padrão: 'DEBUG')
+        capture_prints: Habilita captura das chamadas ao print
+        capture_prints: Habilita captura das chamadas ao print
     
     Returns:
         Logger configurado com funcionalidades básicas
@@ -916,7 +919,14 @@ def _setup_utility_functions(logger: Logger) -> None:
     setattr(Logger, "progress", logger_progress)
     setattr(Logger, "capture_prints", logger_capture_prints)
 
-def start_logger(name: str = None, log_dir: str = 'Logs', split_debug: bool = False, console_level: str = 'INFO', file_level: str = 'DEBUG') -> Logger:
+def start_logger(
+    name: str = None,
+    log_dir: str = 'Logs',
+    split_debug: bool = False,
+    console_level: str = 'INFO',
+    file_level: str = 'DEBUG',
+    capture_prints: bool = True,
+) -> Logger:
     """
     Configura e inicializa um sistema de logging avançado com múltiplas funcionalidades.
     
@@ -926,6 +936,7 @@ def start_logger(name: str = None, log_dir: str = 'Logs', split_debug: bool = Fa
         split_debug: Se True, separa logs de debug em arquivo próprio (padrão: False)
         console_level: Nível de log para o console (padrão: 'INFO')
         file_level: Nível de log para o arquivo (padrão: 'DEBUG')
+        capture_prints: Habilita captura das chamadas ao print
     
     Returns:
         Logger: Instância configurada do logger com todos os recursos habilitados
@@ -942,6 +953,8 @@ def start_logger(name: str = None, log_dir: str = 'Logs', split_debug: bool = Fa
     _setup_context_and_profiling(logger)
     _setup_dependencies_and_network(logger)
     _setup_utility_functions(logger)
+    if capture_prints:
+        logger.capture_prints(True)
     return logger
 
 def _configure_base_logger(name: str, log_dir: str, split_debug: bool, console_level: str = 'INFO', file_level: str = 'DEBUG') -> Logger:
