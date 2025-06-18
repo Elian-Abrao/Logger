@@ -23,7 +23,9 @@ def _init_colorama():
 _INTERNAL_FUNCS = {
     'format', '_extract_call_chain', '_init_colorama',
     '_define_custom_levels', '_setup_directories', '_get_log_filename',
-    '_attach_screenshot', 'screen'
+    '_attach_screenshot', 'screen',
+    'logger_progress', '__call__', '_log_progress', 'log_with_context',
+    '_log_start', '_log_end', 'emit'
 }
 
 # Contexto para filtragem de funcoes internas
@@ -50,10 +52,17 @@ class CustomFormatter(Formatter):
         'SCREEN': Fore.MAGENTA,
     }
 
+    def __init__(self, fmt=None, datefmt=None, style="%", use_color=True):
+        super().__init__(fmt=fmt, datefmt=datefmt, style=style)
+        self.use_color = use_color
+
     def format(self, record):
+        if getattr(record, 'plain', False):
+            return record.getMessage()
         record.emoji = self.LEVEL_EMOJI.get(record.levelname, '🔹')
-        color = self.LEVEL_COLOR.get(record.levelname, '')
-        record.levelname_color = f"{color}[{record.levelname}]{Style.RESET_ALL}"
+        color = self.LEVEL_COLOR.get(record.levelname, '') if self.use_color else ''
+        suffix = Style.RESET_ALL if self.use_color and color else ''
+        record.levelname_color = f"{color}[{record.levelname}]{suffix}"
         record.levelname = f"[{record.levelname}]"
         pad = 11
         record.levelpad = ' ' * (pad - len(record.levelname))
@@ -100,7 +109,7 @@ def _extract_call_chain(record) -> str:
             continue
         if module.startswith(('logging', 'inspect', 'colorama', 'threading')):
             continue
-        if module == __name__:
+        if module == __name__ or module.startswith('logger.'):
             continue
         if not filename.endswith('.py'):
             continue

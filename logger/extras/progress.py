@@ -10,7 +10,7 @@ from wcwidth import wcswidth
 # ---- Funcoes auxiliares ----
 
 def format_block(title: str, lines):
-    space = " " * 36
+    space = " " * 2
     title_str = f"[{title}]"
     title_w = wcswidth(title_str)
     content_ws = [wcswidth(line) for line in lines] if lines else [0]
@@ -63,7 +63,7 @@ class LoggerProgressBar:
             return
         self.n += n
         now = time.time()
-        if (now - self.last_log_time >= self.log_interval or self.n == self.total):
+        if now - self.last_log_time >= self.log_interval and self.n != self.total:
             self._log_progress()
             self.last_log_time = now
             self._print_progress()

@@ -6,9 +6,8 @@ class ProgressStreamHandler(StreamHandler):
     def emit(self, record: logging.LogRecord) -> None:
         logger = logging.getLogger(record.name)
         pbar = getattr(logger, "_active_pbar", None)
-        if pbar and not pbar.closed:
+        if pbar:
             pbar._clear_line()
         super().emit(record)
         if pbar and not pbar.closed:
             pbar._print_progress()
-
