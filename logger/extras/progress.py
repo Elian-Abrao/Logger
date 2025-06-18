@@ -1,7 +1,7 @@
 """progress.py - Barra de progresso e funcoes utilitarias.
 """
 
-from typing import Iterable
+from typing import Iterable, List
 from logging import Logger
 import sys
 import time
@@ -27,6 +27,19 @@ def format_block(title: str, lines):
         corpo.append(f"{space}│ {line}{' '*falta} │")
     base = f"{space}╰{'─'*(total_w-2)}╯"
     return "\n".join([topo] + corpo + [base])
+
+def combine_blocks(blocks: List[str]) -> str:
+    """Combine multiple formatted blocks horizontally."""
+    split_blocks = [b.split("\n") for b in blocks]
+    widths = [max(wcswidth(line) for line in bl) for bl in split_blocks]
+    height = max(len(bl) for bl in split_blocks)
+    padded = []
+    for bl, w in zip(split_blocks, widths):
+        pad_lines = [line + " " * (w - wcswidth(line)) for line in bl]
+        pad_lines += [" " * w] * (height - len(pad_lines))
+        padded.append(pad_lines)
+    combined_lines = ["  ".join(parts) for parts in zip(*padded)]
+    return "\n".join(combined_lines)
 
 class LoggerProgressBar:
     def __init__(self, logger: Logger, total: int = None, desc: str = '', leave: bool = True, unit: str = 'it', log_interval: float = 1.0, log_level: str = 'INFO'):
@@ -64,6 +77,8 @@ class LoggerProgressBar:
             self.closed = True
             self._log_progress(final=True)
             self._print_progress(final=True)
+            if getattr(self.logger, "_active_pbar", None) is self:
+                setattr(self.logger, "_active_pbar", None)
 
     def __enter__(self):
         return self
@@ -125,11 +140,16 @@ class LoggerProgressBar:
         log_method = getattr(self.logger, self.log_level.lower())
         log_method(message)
 
+    def _clear_line(self):
+        if not sys.stdout.isatty():
+            return
+        sys.stdout.write('\r' + ' ' * self.last_line_len + '\r')
+
     def _print_progress(self, final: bool = False):
         if not sys.stdout.isatty():
             return
         info = self._get_progress_info()
-        sys.stdout.write('\r' + ' ' * self.last_line_len + '\r')
+        self._clear_line()
         line = (f"{self.desc}: [{info['bar']}] {info['count']}/{info['total']} ({info['pct']:.1f}%) {info['rate_str']}")
         max_len = 80
         if len(line) > max_len:
@@ -144,6 +164,9 @@ class LoggerProgressBar:
 
 def logger_progress(self: Logger, iterable=None, total: int = None, desc: str = '', leave: bool = True, unit: str = 'it', log_interval: float = 1.0, log_level: str = 'INFO') -> LoggerProgressBar:
     pbar = LoggerProgressBar(logger=self, total=total, desc=desc, leave=leave, unit=unit, log_interval=log_interval, log_level=log_level)
+    setattr(self, "_active_pbar", pbar)
     if iterable is not None:
-        return pbar(iterable)
+        for obj in pbar(iterable):
+            yield obj
+        return
     return pbar

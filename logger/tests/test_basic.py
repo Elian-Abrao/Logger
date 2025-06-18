@@ -8,3 +8,4 @@ def test_start_logger(tmp_path):
     logger.info("ok")
     logger.end()
     assert os.path.exists(logger.log_path)
+    assert os.path.exists(logger.debug_log_path)
