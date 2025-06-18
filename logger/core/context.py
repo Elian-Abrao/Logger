@@ -8,6 +8,9 @@ Uso:
 from contextlib import contextmanager
 from contextvars import ContextVar
 from logging import Logger
+
+# Armazena o método original de logging antes de qualquer monkey patch
+_original_log_method = Logger._log
 from typing import Optional, Callable, Any
 import cProfile
 import pstats
@@ -45,11 +48,14 @@ def logger_context(self: Logger, name: str) -> contextmanager:
     return context_wrapper()
 
 def log_with_context(self: Logger, level, msg, args, **kwargs):
-    """Inclui o contexto atual nas mensagens de log."""
-    context = self._context_manager.get_current_context()
-    if context:
-        msg = f"[{context}] {msg}"
-    self._original_log(level, msg, args, **kwargs)
+    """Inclui o contexto atual nas mensagens de log se disponível."""
+    context_manager = getattr(self, '_context_manager', None)
+    if context_manager:
+        context = context_manager.get_current_context()
+        if context:
+            msg = f"[{context}] {msg}"
+    original = getattr(self, '_original_log', _original_log_method)
+    original(self, level, msg, args, **kwargs)
 
 class Profiler:
     """Gerenciador simples para profiling utilizando cProfile."""
@@ -99,10 +105,17 @@ def _setup_context_and_profiling(logger: Logger) -> None:
     """Configura suporte a contexto e profiling na instancia do logger."""
     context_manager = ContextManager()
     profiler = Profiler()
+
+    # guarda instancias no logger
     setattr(logger, '_context_manager', context_manager)
     setattr(logger, '_profiler', profiler)
-    setattr(logger, '_original_log', logger._log)
-    setattr(Logger, '_log', log_with_context)
+
+    # Salva o metodo original apenas na primeira execucao
+    if not hasattr(logger, '_original_log'):
+        setattr(logger, '_original_log', _original_log_method)
+
+    # Aplica wrappers na classe para permitir uso pelos loggers criados
+    Logger._log = log_with_context
     setattr(Logger, 'context', logger_context)
     setattr(Logger, 'profile', logger_profile)
     setattr(Logger, 'profile_cm', logger_profile_cm)
