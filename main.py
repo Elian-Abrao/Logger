@@ -2,7 +2,6 @@
 
 from logger import start_logger
 
-
 def main():
     logger = start_logger("Demo")
     logger.start()
@@ -14,9 +13,10 @@ def main():
         logger.sleep(0.2)
         logger.debug("testeee")
 
+    logger.cleanup()
+
     print("Mensagem exemplo")
     logger.end()
-
 
 if __name__ == "__main__":
     main()
