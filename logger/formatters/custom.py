@@ -9,15 +9,21 @@ Uso:
 import logging
 from logging import Formatter, Logger
 from pathlib import Path
-from colorama import init, Fore, Style
+from colorama import Fore, Style
 import threading
 import inspect
 import sys
 from contextvars import ContextVar
 
-# Inicializa colorama
-def _init_colorama():
-    init(autoreset=True)
+
+from logger.extras.helpers import _init_colorama
+
+__all__ = [
+    "_init_colorama",
+    "CustomFormatter",
+    "AutomaticTracebackLogger",
+    "_define_custom_levels",
+]
 
 # Funcoes internas ignoradas na geracao da call chain
 _INTERNAL_FUNCS = {
