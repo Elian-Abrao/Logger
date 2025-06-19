@@ -2,7 +2,7 @@
 
 from typing import Dict, Any, Tuple, Optional
 from logging import Logger
-from .dependency import logger_log_environment
+from .dependency import DependencyManager, logger_log_environment
 from urllib.parse import urlparse
 from concurrent.futures import ThreadPoolExecutor
 from collections import defaultdict
@@ -79,8 +79,6 @@ def logger_get_network_metrics(self: Logger, domain: str = None) -> Dict[str, An
             metrics['average_latency'] = avg_latency
         return metrics
     return dict(self._net_monitor.metrics)
-
-from .dependency import DependencyManager
 
 def _setup_dependencies_and_network(logger: Logger) -> None:
     dep_manager = DependencyManager()
