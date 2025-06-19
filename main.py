@@ -12,9 +12,6 @@ def main():
         logger.sleep(0.2)
         logger.debug("testeee")
 
-    # logger.cleanup()
-    logger.screen("Teste")
-
     print("Mensagem exemplo")
     logger.end()
 
