@@ -65,10 +65,10 @@ def logger_log_system_status(self: Logger, level: str = "INFO", return_block: bo
     proc_mem, sys_mem = self._monitor.get_memory_usage()
     proc_cpu, sys_cpu = self._monitor.get_cpu_usage()
     lines = [
-        f"💻 CPU: Processo {proc_cpu:.1f}% • Sistema: {sys_cpu:.1f}%",
-        f"💾 Memória: {proc_mem:.1f}MB • Sistema: {sys_mem:.1f}%",
+        f"CPU: Processo {proc_cpu:.1f}% • Sistema: {sys_cpu:.1f}%",
+        f"Memória: {proc_mem:.1f}MB • Sistema: {sys_mem:.1f}%",
     ]
-    block = format_block("🧠 STATUS DO SISTEMA", lines)
+    block = format_block("STATUS DO SISTEMA", lines)
     if return_block:
         return block
     getattr(self, level.lower())(f"\n{block}")
@@ -88,7 +88,7 @@ def logger_check_memory_leak(self: Logger, level: str = "WARNING") -> None:
     lines = [f"Diferença de memória: {memory_diff:.1f}MB"]
     for name, diff in obj_diff.items():
         lines.append(f"{name}: {diff:+d}")
-    block = format_block("🚨 VAZAMENTO DE MEMÓRIA", lines)
+    block = format_block("VAZAMENTO DE MEMÓRIA", lines)
     getattr(self, level.lower())(f"\n{block}")
 
 

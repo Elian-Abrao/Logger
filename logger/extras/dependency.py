@@ -53,7 +53,7 @@ def logger_log_environment(self: Logger, level: str = 'INFO', return_block: bool
     for pkg in important:
         if pkg in info['packages']:
             linhas.append(f"  - {pkg}: {info['packages'][pkg]}")
-    bloco = format_block("🔧 AMBIENTE", linhas)
+    bloco = format_block("AMBIENTE", linhas)
     if return_block:
         return bloco
     log_method(f"\n{bloco}")

@@ -20,11 +20,11 @@ def logger_log_start(self: Logger, verbose: int = 1) -> None:
     hora = now.strftime("%H:%M:%S")
 
     lines = [
-        "🚀 PROCESSO INICIADO",
+        "PROCESSO INICIADO",
         f"Data: {data} • Hora: {hora}",
         f"Script: {script} • Pasta: {folder}",
     ]
-    banner = format_block("🚦INÍCIO", lines)
+    banner = format_block("INÍCIO", lines)
     blocks = [banner]
 
     if verbose >= 1:
@@ -59,11 +59,11 @@ def logger_log_end(self: Logger, verbose: int = 1) -> None:
         blocks.append(self.log_system_status(return_block=True))
 
     lines = [
-        "🏁 PROCESSO FINALIZADO",
+        "PROCESSO FINALIZADO",
         f"Data: {data} • Hora: {hora}",
         f"Script: {script} • Pasta: {folder}",
     ]
-    banner = format_block("🏁 FIM", lines)
+    banner = format_block("FIM", lines)
     blocks.insert(0, banner)
     banner_final = combine_blocks(blocks)
     self.success(f"\n{banner_final}", extra={"plain": True})

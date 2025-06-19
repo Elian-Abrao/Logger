@@ -82,7 +82,7 @@ class Profiler:
 # --- Wrappers de profiling ---
 
 @contextmanager
-def logger_profile_cm(self: Logger, name: str = None) -> None:
+def logger_profile_cm(self: Logger, name: str = None):
     section_name = name or 'Seção'
     self.info(f"🔍 Iniciando profiling: {section_name}")
     self._profiler.start()

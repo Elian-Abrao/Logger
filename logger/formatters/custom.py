@@ -59,25 +59,32 @@ class CustomFormatter(Formatter):
     def format(self, record):
         if getattr(record, 'plain', False):
             return record.getMessage()
-        record.emoji = self.LEVEL_EMOJI.get(record.levelname, '🔹')
-        color = self.LEVEL_COLOR.get(record.levelname, '') if self.use_color else ''
-        suffix = Style.RESET_ALL if self.use_color and color else ''
-        record.levelname_color = f"{color}[{record.levelname}]{suffix}"
-        record.levelname = f"[{record.levelname}]"
-        pad = 11
-        record.levelpad = ' ' * (pad - len(record.levelname))
-        record.thread = threading.current_thread().name
-        record.thread_disp = '' if record.thread == 'MainThread' else f"[T:{record.thread}]"
-        record.call_chain = _extract_call_chain(record)
-        if "logger" not in record.pathname.lower():
-            filename = Path(record.pathname).name
-            record.meta = f"⮕ 📁{filename}:{record.lineno} | 🧭 {record.call_chain}"
-        else:
-            record.meta = ""
-        mensagem_formatada = super().format(record)
-        if record.meta:
-            mensagem_formatada += f" {record.meta}"
-        return mensagem_formatada
+        original_levelname = record.levelname
+        original_levelname_color = getattr(record, 'levelname_color', None)
+        try:
+            record.emoji = self.LEVEL_EMOJI.get(original_levelname, '🔹')
+            color = self.LEVEL_COLOR.get(original_levelname, '') if self.use_color else ''
+            suffix = Style.RESET_ALL if self.use_color and color else ''
+            record.levelname_color = f"{color}[{original_levelname}]{suffix}"
+            record.levelname = f"[{original_levelname}]"
+            pad = 11
+            record.levelpad = ' ' * (pad - len(record.levelname))
+            record.thread = threading.current_thread().name
+            record.thread_disp = '' if record.thread == 'MainThread' else f"[T:{record.thread}]"
+            record.call_chain = _extract_call_chain(record)
+            if "logger" not in record.pathname.lower():
+                filename = Path(record.pathname).name
+                record.meta = f"⮕ 📁{filename}:{record.lineno} | 🧭 {record.call_chain}"
+            else:
+                record.meta = ""
+            mensagem_formatada = super().format(record)
+            if record.meta:
+                mensagem_formatada += f" {record.meta}"
+            return mensagem_formatada
+        finally:
+            record.levelname = original_levelname
+            if original_levelname_color is not None:
+                record.levelname_color = original_levelname_color
 
 class AutomaticTracebackLogger(logging.Logger):
     """Logger que captura automaticamente exceptions para incluir stack trace."""

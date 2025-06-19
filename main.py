@@ -10,6 +10,7 @@ def main():
     with logger.context("Etapa"):  # from context module via start_logger
         with logger.timer("demo"):
             for i in logger.progress(range(5), desc="Trabalhando"):
+                logger.success("testeee")
                 logger.sleep(0.2)
     logger.capture_prints(True)
     print("Mensagem exemplo")
