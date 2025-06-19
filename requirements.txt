@@ -1,0 +1,7 @@
+colorama
+psutil
+requests
+wcwidth
+setuptools
+# optional dependencies
+pyautogui
