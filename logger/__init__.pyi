@@ -115,3 +115,4 @@ def start_logger(
         3+ → pathname:lineno + thread_disp (máx).
     """
     ...
+
