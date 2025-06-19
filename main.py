@@ -4,7 +4,6 @@ from logger import start_logger
 
 def main():
     logger = start_logger("Demo")
-    logger.start()
 
     logger.info("Processo iniciado")
 
@@ -13,7 +12,8 @@ def main():
         logger.sleep(0.2)
         logger.debug("testeee")
 
-    logger.cleanup()
+    # logger.cleanup()
+    logger.screen("Teste")
 
     print("Mensagem exemplo")
     logger.end()

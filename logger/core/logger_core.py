@@ -69,6 +69,7 @@ def start_logger(
     _setup_lifecycle(logger)
     if capture_prints:
         logger.capture_prints(True)
+    logger.start()
     return logger
 
 
