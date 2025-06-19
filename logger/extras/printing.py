@@ -13,7 +13,7 @@ class PrintCapture:
         self.prefix = ''
         self.active = False
 
-    def start_capture(self, logger, level='WARNING', prefix='👉 Print(): '):
+    def start_capture(self, logger, level='WARNING', prefix='❌ Evite o Uso de Print(): '):
         if self.active:
             return
         self.logger = logger
@@ -31,9 +31,9 @@ class PrintCapture:
                 return self.original_print(*args, file=file, sep=sep, end=end, flush=flush)
             message = sep.join(str(arg) for arg in args)
             log_method = getattr(self.logger, self.log_level.lower())
-            log_method(f"-------------- ❌ Evite o Uso de Print ❌ --------------")
+            # log_method(f"-------------- ❌ Evite o Uso de Print ❌ --------------")
             log_method(f"{self.prefix}{message}")
-            log_method(f"-------------------------------------------------------")
+            # log_method(f"-------------------------------------------------------")
             if end != '\n':
                 self.original_print(*args, sep=sep, end=end, flush=flush)
         builtins.print = new_print
@@ -45,7 +45,7 @@ class PrintCapture:
 
 print_capture = PrintCapture()
 
-def logger_capture_prints(self: Logger, active: bool = True, level: str = 'INFO', prefix: str = '👉 Print: '):
+def logger_capture_prints(self: Logger, active: bool = True, level: str = 'INFO', prefix: str = '❌ Evite o Uso de Print(): '):
     if active:
         print_capture.start_capture(self, level=level, prefix=prefix)
     else:
