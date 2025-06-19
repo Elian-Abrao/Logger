@@ -8,14 +8,14 @@ Uso:
 from contextlib import contextmanager
 from contextvars import ContextVar
 from logging import Logger
+from typing import Callable, Any, Optional
+import cProfile
+import functools
+import io
+import pstats
 
 # Armazena o método original de logging antes de qualquer monkey patch
 _original_log_method = Logger._log
-from typing import Optional, Callable, Any
-import cProfile
-import pstats
-import io
-import functools
 
 # Variavel de contexto global para rastreamento da pilha de contextos
 _log_context = ContextVar('log_context', default=[])
