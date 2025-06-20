@@ -22,6 +22,10 @@ logger = start_logger("Demo")
 logger.info("Processo iniciado")
 ```
 
+O método ``logger.end()`` é chamado automaticamente ao término do
+programa, mas pode ser invocado manualmente caso deseje encerrar o
+logger antecipadamente.
+
 Para mais exemplos consulte `main.py`.
 
 ## Testes e qualidade de código
