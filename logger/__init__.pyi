@@ -112,6 +112,14 @@ class StructuredLogger(Logger):
 
     def profile_cm(self, name: str | None = ...) -> ContextManager[Any]: ...
 
+    def profile_report(
+        self,
+        *,
+        limit: int = ...,
+        level: str = ...,
+        return_block: bool = ...,
+    ) -> str | None: ...
+
     # dynamically added attributes
     _screen_dir: Path
     _screen_name: str

@@ -13,6 +13,7 @@ import cProfile
 import functools
 import io
 import pstats
+from logger.extras.progress import format_block
 
 # Armazena o método original de logging antes de qualquer monkey patch
 _original_log_method = Logger._log
@@ -79,6 +80,40 @@ class Profiler:
         ps.print_stats(20)
         return s.getvalue()
 
+    def _build_chain(
+        self,
+        func: tuple[str, int, str],
+        stats: dict,
+        depth: int = 3,
+    ) -> list[tuple[str, int, str]]:
+        if depth <= 0:
+            return [func]
+        callers = stats.get(func, (0, 0, 0.0, 0.0, {}))[4]
+        if not callers:
+            return [func]
+        best = max(callers.items(), key=lambda kv: kv[1][3])[0]
+        return self._build_chain(best, stats, depth - 1) + [func]
+
+    def get_report_lines(self, limit: int = 10) -> list[str]:
+        """Linhas de profiling ordenadas por tempo acumulado em português."""
+        if not self.profiler:
+            return []
+        ps = pstats.Stats(self.profiler)
+        ps.calc_callees()
+        stats_dict: dict = getattr(ps, "stats", {})  # type: ignore[attr-defined]
+        items = []
+        for func, (cc, nc, tt, ct, callers) in stats_dict.items():
+            items.append((ct, tt, nc, func))
+        items.sort(reverse=True)
+        lines = []
+        for ct, tt, nc, func in items[:limit]:
+            chain = self._build_chain(func, stats_dict)
+            names = " → ".join(f[2] for f in chain)
+            lines.append(
+                f"{names} | chamadas: {nc} | acumulado: {ct:.3f}s | próprio: {tt:.3f}s"
+            )
+        return lines
+
 # --- Wrappers de profiling ---
 
 @contextmanager
@@ -106,6 +141,25 @@ def logger_profile(
             return func(*args, **kwargs)
     return wrapper
 
+
+def logger_profile_report(
+    self: Logger,
+    *,
+    limit: int = 10,
+    level: str = "INFO",
+    return_block: bool = False,
+) -> str | None:
+    """Gera um resumo do profiling executado com rótulos em português."""
+    self._profiler.stop()  # type: ignore[attr-defined]
+    lines = self._profiler.get_report_lines(limit)  # type: ignore[attr-defined]
+    if not lines:
+        return None
+    block = format_block("PROFILING", lines)
+    if return_block:
+        return block
+    getattr(self, level.lower())(f"\n{block}", extra={"plain": True, "file_only": True})
+    return None
+
 def _setup_context_and_profiling(logger: Logger) -> None:
     """Configura suporte a contexto e profiling na instancia do logger."""
     context_manager: ContextManager = ContextManager()
@@ -124,3 +178,4 @@ def _setup_context_and_profiling(logger: Logger) -> None:
     setattr(Logger, 'context', logger_context)
     setattr(Logger, 'profile', logger_profile)
     setattr(Logger, 'profile_cm', logger_profile_cm)
+    setattr(Logger, 'profile_report', logger_profile_report)

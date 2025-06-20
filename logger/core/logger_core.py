@@ -16,7 +16,7 @@ from logger.formatters.custom import (
     AutomaticTracebackLogger,
     _define_custom_levels,
 )
-from logger.handlers import ProgressStreamHandler
+from logger.handlers import ProgressStreamHandler, FileOnlyFilter
 from logger.core.context import _setup_context_and_profiling
 from logger.extras import (
     _init_colorama,
@@ -152,6 +152,7 @@ def _configure_base_logger(
     ch = ProgressStreamHandler()
     ch.setLevel(console_level_value)
     ch.setFormatter(CustomFormatter(fmt=console_fmt, datefmt=datefmt, style="{"))
+    ch.addFilter(FileOnlyFilter())
     logger.addHandler(ch)
 
     # Arquivo DEBUG – sempre no formato máximo
