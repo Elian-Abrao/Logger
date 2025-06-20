@@ -9,6 +9,7 @@ from __future__ import annotations
 import logging
 from logging import Logger, FileHandler
 from pathlib import Path
+from typing import Iterable
 
 from logger.formatters.custom import (
     CustomFormatter,
@@ -49,6 +50,9 @@ def start_logger(
     file_level: str = "DEBUG",
     capture_prints: bool = True,
     verbose: int = 0,
+    *,
+    show_all_leaks: bool = False,
+    watch_objects: Iterable[str] | None = None,
 ) -> Logger:
     """
     Cria e devolve um Logger configurado.
@@ -58,6 +62,15 @@ def start_logger(
         1 → só call_chain;
         2 → + pathname:lineno;
         3+ → pathname:lineno + thread_disp (máx).
+
+    show_all_leaks:
+        Se ``True`` exibe todas as diferenças de objetos na verificação de
+        memória. Caso ``False`` (padrão) apenas diferenças relevantes são
+        mostradas.
+
+    watch_objects:
+        Lista de tipos de objetos para acompanhar sempre na verificação de
+        vazamento de memória.
     """
     logger = _configure_base_logger(
         name, log_dir, console_level, file_level, verbose
@@ -67,8 +80,12 @@ def start_logger(
     _setup_context_and_profiling(logger)
     _setup_dependencies_and_network(logger)
     _setup_lifecycle(logger)
+    setattr(logger, "_leak_show_all", show_all_leaks)
+    setattr(logger, "_leak_watch", set(watch_objects or []))
+    setattr(logger, "_leak_threshold_mb", 5.0)
     if capture_prints:
         logger.capture_prints(True)  # type: ignore[attr-defined]
+    logger.memory_snapshot()  # type: ignore[attr-defined]
     logger.start()  # type: ignore[attr-defined]
     return logger
 

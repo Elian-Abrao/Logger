@@ -81,7 +81,15 @@ class StructuredLogger(Logger):
         """Armazena um snapshot de memória para comparação futura."""
         ...
 
-    def check_memory_leak(self, level: str = "WARNING") -> None:
+    def check_memory_leak(
+        self,
+        level: str = "WARNING",
+        return_block: bool = False,
+        *,
+        show_all: bool | None = None,
+        watch: Iterable[str] | None = None,
+        mem_threshold: float | None = None,
+    ) -> str | None:
         """Verifica diferenças de uso de memória indicando possível vazamento."""
         ...
 
@@ -118,8 +126,15 @@ class StructuredLogger(Logger):
 
 
 def start_logger(
-    name: str | None = ..., log_dir: str = "Logs", console_level: str = "INFO",
-    file_level: str = "DEBUG", capture_prints: bool = True, verbose: int = 0
+    name: str | None = ...,
+    log_dir: str = "Logs",
+    console_level: str = "INFO",
+    file_level: str = "DEBUG",
+    capture_prints: bool = True,
+    verbose: int = 0,
+    *,
+    show_all_leaks: bool = False,
+    watch_objects: Iterable[str] | None = None,
 ) -> StructuredLogger:
     """Cria e devolve um Logger configurado.
 
