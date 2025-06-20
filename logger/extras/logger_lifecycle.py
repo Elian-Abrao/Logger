@@ -32,7 +32,8 @@ def logger_log_start(self: Logger, verbose: int = 1) -> None:
         self.reset_metrics()  # type: ignore[attr-defined]
         status = self.log_system_status(return_block=True)  # type: ignore[attr-defined]
         env = self.log_environment(return_block=True)  # type: ignore[attr-defined]
-        blocks.extend([status, env])
+        conn = self.check_connectivity(return_block=True)  # type: ignore[attr-defined]
+        blocks.extend([status, env, conn])
 
     if verbose >= 2:
         self.debug("Registrando snapshot inicial de memória...")
@@ -58,6 +59,7 @@ def logger_log_end(self: Logger, verbose: int = 1) -> None:
     blocks: list[str] = []
     if verbose >= 1:
         blocks.append(self.log_system_status(return_block=True))  # type: ignore[attr-defined]
+        blocks.append(self.check_connectivity(return_block=True))  # type: ignore[attr-defined]
 
     lines = [
         "PROCESSO FINALIZADO",

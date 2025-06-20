@@ -94,7 +94,7 @@ def test_logger_check_connectivity_and_metrics(tmp_path, caplog, monkeypatch):
     monkeypatch.setattr(logger, '_net_monitor', dummy_nm, raising=False)
 
     with caplog.at_level(logging.INFO):
-        logger.check_connectivity('http://example.com')
+        logger.check_connectivity(['http://example.com'])
     assert any('example.com' in rec.message for rec in caplog.records)
 
     metrics = logger.get_network_metrics('example.com')
@@ -120,4 +120,36 @@ def test_metrics_tracker_and_timer(tmp_path, caplog, monkeypatch):
     assert 'task concluída em 2.0s' in messages
     assert 'Duração total: 2.0s' in messages
     logger.end()
+
+
+def test_start_logger_calls_check_connectivity(tmp_path, monkeypatch):
+    called = {'n': 0}
+
+    def fake_check(self, urls=None, level='INFO', timeout=1.0, return_block=False):
+        called['n'] += 1
+        return 'X'
+
+    monkeypatch.setattr(network_mod, 'logger_check_connectivity', fake_check)
+
+    logger = start_logger('auto', log_dir=str(tmp_path), console_level='INFO')
+    assert called['n'] == 1
+    logger.end()
+
+
+def test_connectivity_block_in_banners(tmp_path, caplog, monkeypatch):
+    calls: list[bool] = []
+
+    def fake_check(self, urls=None, level='INFO', timeout=1.0, return_block=False):
+        calls.append(return_block)
+        return 'CONNECT'
+
+    monkeypatch.setattr(network_mod, 'logger_check_connectivity', fake_check)
+
+    with caplog.at_level(logging.INFO):
+        logger = start_logger('banner', log_dir=str(tmp_path), console_level='INFO')
+        logger.end()
+
+    assert calls == [True, True]
+    messages = ' '.join(rec.message for rec in caplog.records)
+    assert messages.count('CONNECT') == 2
 

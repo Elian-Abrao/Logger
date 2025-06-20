@@ -65,10 +65,11 @@ class StructuredLogger(Logger):
 
     def check_connectivity(
         self,
-        url: str | None = None,
+        urls: str | Iterable[str] | None = None,
         level: str = "INFO",
         timeout: float = 1.0,
-    ) -> None: ...
+        return_block: bool = False,
+    ) -> str | None: ...
 
     def get_network_metrics(self, domain: str | None = None) -> Dict[str, Any]: ...
 
