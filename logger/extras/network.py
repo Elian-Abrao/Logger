@@ -52,29 +52,46 @@ class NetworkMonitor:
 
 def logger_check_connectivity(
     self: Logger,
-    url: str | None = None,
-    level: str = 'INFO',
+    urls: str | list[str] | None = None,
+    level: str = "INFO",
     timeout: float = 1.0,
-) -> None:
+    return_block: bool = False,
+) -> str | None:
+    """Testa a conectividade geral e opcionalmente múltiplas URLs."""
     connected, latency = self._net_monitor.check_connection(timeout=timeout)  # type: ignore[attr-defined]
     log_method = getattr(self, level.lower())
-    linhas = []
+    linhas: list[str] = []
     if connected:
         linhas.append(f"Status: ✅ Conectado • Latência: {latency:.1f}ms")
     else:
         linhas.append("❌ Sem conexão com a internet")
-    if url:
+
+    urls_list: list[str]
+    if urls is None:
+        urls_list = ["https://www.google.com"]
+    elif isinstance(urls, str):
+        urls_list = [urls]
+    else:
+        urls_list = list(urls)
+
+    for url in urls_list:
         try:
             metrics = self._net_monitor.measure_latency(url, timeout=timeout)  # type: ignore[attr-defined]
-            if 'latency' in metrics:
+            if "latency" in metrics:
                 linhas.append(f"URL Testada: {url}")
-                linhas.append(f"↳ Latência: {metrics['latency']:.1f}ms • Status: {metrics['status_code']} • Tamanho: {metrics['content_size']/1024:.1f}KB")
+                linhas.append(
+                    f"↳ Latência: {metrics['latency']:.1f}ms • Status: {metrics['status_code']} • Tamanho: {metrics['content_size']/1024:.1f}KB"
+                )
             else:
                 linhas.append(f"❌ Erro ao acessar {url}: {metrics['error']}")
         except Exception as e:
             linhas.append(f"❌ Erro ao testar {url}: {str(e)}")
+
     bloco = format_block("🌐 CONECTIVIDADE", linhas)
+    if return_block:
+        return bloco
     log_method(f"\n{bloco}")
+    return None
 
 def logger_get_network_metrics(self: Logger, domain: str | None = None) -> Dict[str, Any]:
     if domain:
