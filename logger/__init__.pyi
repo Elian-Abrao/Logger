@@ -81,7 +81,9 @@ class StructuredLogger(Logger):
         """Armazena um snapshot de memória para comparação futura."""
         ...
 
-    def check_memory_leak(self, level: str = "WARNING") -> None:
+    def check_memory_leak(
+        self, level: str = "WARNING", return_block: bool = False
+    ) -> str | None:
         """Verifica diferenças de uso de memória indicando possível vazamento."""
         ...
 

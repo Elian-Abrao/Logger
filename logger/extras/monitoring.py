@@ -82,16 +82,21 @@ def logger_memory_snapshot(self: Logger) -> None:
     self.debug("Snapshot de memória registrado")
 
 
-def logger_check_memory_leak(self: Logger, level: str = "WARNING") -> None:
+def logger_check_memory_leak(
+    self: Logger, level: str = "WARNING", return_block: bool = False
+) -> str | None:
     """Verifica diferenças de uso de memória indicando possível vazamento."""
     memory_diff, obj_diff = self._monitor.get_memory_diff()  # type: ignore[attr-defined]
     if not memory_diff and not obj_diff:
-        return
+        return None
     lines = [f"Diferença de memória: {memory_diff:.1f}MB"]
     for name, diff in obj_diff.items():
         lines.append(f"{name}: {diff:+d}")
     block = format_block("VAZAMENTO DE MEMÓRIA", lines)
+    if return_block:
+        return block
     getattr(self, level.lower())(f"\n{block}")
+    return None
 
 
 def _setup_monitoring(logger: Logger) -> None:
