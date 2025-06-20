@@ -57,9 +57,12 @@ def logger_log_end(self: Logger, verbose: int = 1) -> None:
         self.report_metrics()  # type: ignore[attr-defined]
         self.debug("Verificando possíveis vazamentos de memória...")
     leak_block = self.check_memory_leak(return_block=True)  # type: ignore[attr-defined]
-    profile_block: str | None = None
+    profile_summary: str | None = None
     if verbose >= 1:
-        profile_block = self.profile_report(return_block=True)  # type: ignore[attr-defined]
+        self.profile_report()  # type: ignore[attr-defined]
+        summary_lines = self._profiler.get_report_lines(3)  # type: ignore[attr-defined]
+        if summary_lines:
+            profile_summary = format_block("PROFILING", summary_lines[:1])
 
     blocks: list[str] = []
     if verbose >= 1:
@@ -67,8 +70,9 @@ def logger_log_end(self: Logger, verbose: int = 1) -> None:
         blocks.append(self.check_connectivity(return_block=True))  # type: ignore[attr-defined]
     if leak_block:
         blocks.append(leak_block)
-    if profile_block:
-        blocks.append(profile_block)
+
+    if profile_summary:
+        blocks.append(profile_summary)
 
     lines = [
         "PROCESSO FINALIZADO",
