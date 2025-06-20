@@ -62,9 +62,9 @@ def logger_check_connectivity(
     log_method = getattr(self, level.lower())
     linhas: list[str] = []
     if connected:
-        linhas.append(f"Status: ✅ Conectado • Latência: {latency:.1f}ms")
+        linhas.append(f"Status: Conectado • Latência: {latency:.1f}ms")
     else:
-        linhas.append("❌ Sem conexão com a internet")
+        linhas.append("Sem conexão com a internet")
 
     urls_list: list[str]
     if urls is None:
@@ -83,11 +83,11 @@ def logger_check_connectivity(
                     f"↳ Latência: {metrics['latency']:.1f}ms • Status: {metrics['status_code']} • Tamanho: {metrics['content_size']/1024:.1f}KB"
                 )
             else:
-                linhas.append(f"❌ Erro ao acessar {url}: {metrics['error']}")
+                linhas.append(f"Erro ao acessar {url}: {metrics['error']}")
         except Exception as e:
-            linhas.append(f"❌ Erro ao testar {url}: {str(e)}")
+            linhas.append(f"Erro ao testar {url}: {str(e)}")
 
-    bloco = format_block("🌐 CONECTIVIDADE", linhas)
+    bloco = format_block("CONECTIVIDADE", linhas)
     if return_block:
         return bloco
     log_method(f"\n{bloco}")
