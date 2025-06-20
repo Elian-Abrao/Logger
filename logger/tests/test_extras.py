@@ -176,3 +176,32 @@ def test_memory_leak_block_in_banner(tmp_path, caplog):
 
     assert any('VAZAMENTO DE MEMÓRIA' in rec.message for rec in caplog.records)
 
+def test_memory_leak_respects_threshold(tmp_path, caplog):
+    logger = start_logger('thr', log_dir=str(tmp_path), console_level='INFO')
+    logger._monitor.get_memory_diff = lambda: (1.0, {'Obj': 2})
+    with caplog.at_level(logging.INFO):
+        logger.end()
+
+    assert not any('VAZAMENTO DE MEMÓRIA' in r.message for r in caplog.records)
+
+
+def test_memory_leak_show_all_flag(tmp_path, caplog):
+    logger = start_logger(
+        'all', log_dir=str(tmp_path), console_level='INFO', show_all_leaks=True
+    )
+    logger._monitor.get_memory_diff = lambda: (1.0, {'Obj': 1})
+    with caplog.at_level(logging.INFO):
+        logger.end()
+
+    assert any('VAZAMENTO DE MEMÓRIA' in r.message for r in caplog.records)
+
+
+def test_memory_leak_watch_object(tmp_path, caplog):
+    logger = start_logger(
+        'watch', log_dir=str(tmp_path), console_level='INFO', watch_objects=['X']
+    )
+    logger._monitor.get_memory_diff = lambda: (1.0, {'X': 1})
+    with caplog.at_level(logging.INFO):
+        logger.end()
+
+    assert any('X:' in r.message for r in caplog.records)

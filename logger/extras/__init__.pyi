@@ -69,7 +69,14 @@ def logger_log_system_status(self: Logger, level: str = ..., return_block: bool 
 def logger_memory_snapshot(self: Logger) -> None: ...
 
 def logger_check_memory_leak(
-    self: Logger, level: str = ..., return_block: bool = ...
+    self: Logger,
+    level: str = ...,
+    return_block: bool = ...,
+    *,
+    show_all: bool | None = ...,
+    watch: Iterable[str] | None = ...,
+    mem_threshold: float | None = ...,
+
 ) -> str | None: ...
 
 def logger_sleep(self: Logger, duration: float, unit: str = ..., level: str = ..., message: str | None = ...) -> None: ...
