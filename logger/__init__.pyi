@@ -1,5 +1,6 @@
 from logging import Logger
 from typing import Iterable, Any, ContextManager, Callable, Dict
+from pathlib import Path
 
 from .extras.progress import LoggerProgressBar
 from .extras.utils.timer import Timer
@@ -100,6 +101,19 @@ class StructuredLogger(Logger):
     def profile(self, func: Callable | None = ..., *, name: str | None = ...) -> Any: ...
 
     def profile_cm(self, name: str | None = ...) -> ContextManager[Any]: ...
+
+    # dynamically added attributes
+    _screen_dir: Path
+    _screen_name: str
+    log_path: str
+    debug_log_path: str
+    _active_pbar: LoggerProgressBar | None
+    _context_manager: Any
+    _profiler: Any
+    _metrics: Any
+    _monitor: Any
+    _dep_manager: Any
+    _net_monitor: Any
 
 
 def start_logger(

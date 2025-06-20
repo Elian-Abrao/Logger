@@ -50,8 +50,13 @@ class NetworkMonitor:
             self.metrics[domain]['total_errors'] += 1
             return {'error': str(e), 'type': type(e).__name__}
 
-def logger_check_connectivity(self: Logger, url: str = None, level: str = 'INFO', timeout: float = 1.0) -> None:
-    connected, latency = self._net_monitor.check_connection(timeout=timeout)
+def logger_check_connectivity(
+    self: Logger,
+    url: str | None = None,
+    level: str = 'INFO',
+    timeout: float = 1.0,
+) -> None:
+    connected, latency = self._net_monitor.check_connection(timeout=timeout)  # type: ignore[attr-defined]
     log_method = getattr(self, level.lower())
     linhas = []
     if connected:
@@ -60,7 +65,7 @@ def logger_check_connectivity(self: Logger, url: str = None, level: str = 'INFO'
         linhas.append("❌ Sem conexão com a internet")
     if url:
         try:
-            metrics = self._net_monitor.measure_latency(url, timeout=timeout)
+            metrics = self._net_monitor.measure_latency(url, timeout=timeout)  # type: ignore[attr-defined]
             if 'latency' in metrics:
                 linhas.append(f"URL Testada: {url}")
                 linhas.append(f"↳ Latência: {metrics['latency']:.1f}ms • Status: {metrics['status_code']} • Tamanho: {metrics['content_size']/1024:.1f}KB")
@@ -71,14 +76,14 @@ def logger_check_connectivity(self: Logger, url: str = None, level: str = 'INFO'
     bloco = format_block("🌐 CONECTIVIDADE", linhas)
     log_method(f"\n{bloco}")
 
-def logger_get_network_metrics(self: Logger, domain: str = None) -> Dict[str, Any]:
+def logger_get_network_metrics(self: Logger, domain: str | None = None) -> Dict[str, Any]:
     if domain:
-        metrics = self._net_monitor.metrics[domain]
+        metrics = self._net_monitor.metrics[domain]  # type: ignore[attr-defined]
         if metrics['latencies']:
             avg_latency = sum(metrics['latencies']) / len(metrics['latencies'])
             metrics['average_latency'] = avg_latency
         return metrics
-    return dict(self._net_monitor.metrics)
+    return dict(self._net_monitor.metrics)  # type: ignore[attr-defined]
 
 def _setup_dependencies_and_network(logger: Logger) -> None:
     dep_manager = DependencyManager()

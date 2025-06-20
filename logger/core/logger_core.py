@@ -68,8 +68,8 @@ def start_logger(
     _setup_dependencies_and_network(logger)
     _setup_lifecycle(logger)
     if capture_prints:
-        logger.capture_prints(True)
-    logger.start()
+        logger.capture_prints(True)  # type: ignore[attr-defined]
+    logger.start()  # type: ignore[attr-defined]
     return logger
 
 

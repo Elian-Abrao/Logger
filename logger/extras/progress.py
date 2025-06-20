@@ -42,7 +42,16 @@ def combine_blocks(blocks: List[str]) -> str:
     return "\n".join(combined_lines)
 
 class LoggerProgressBar:
-    def __init__(self, logger: Logger, total: int = None, desc: str = '', leave: bool = True, unit: str = 'it', log_interval: float = 1.0, log_level: str = 'INFO'):
+    def __init__(
+        self,
+        logger: Logger,
+        total: int | None = None,
+        desc: str = '',
+        leave: bool = True,
+        unit: str = 'it',
+        log_interval: float = 1.0,
+        log_level: str = 'INFO',
+    ) -> None:
         self.logger = logger
         self.total = total
         self.desc = desc
@@ -86,10 +95,10 @@ class LoggerProgressBar:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
 
-    def __call__(self, iterable: Iterable):
+    def __call__(self, iterable: Iterable) -> Iterable:
         if self.total is None:
             try:
-                self.total = len(iterable)
+                self.total = len(iterable)  # type: ignore[arg-type]
             except (TypeError, AttributeError):
                 try:
                     iterable = list(iterable)
@@ -162,11 +171,26 @@ class LoggerProgressBar:
             sys.stdout.flush()
 
 
-def logger_progress(self: Logger, iterable=None, total: int = None, desc: str = '', leave: bool = True, unit: str = 'it', log_interval: float = 1.0, log_level: str = 'INFO') -> LoggerProgressBar:
-    pbar = LoggerProgressBar(logger=self, total=total, desc=desc, leave=leave, unit=unit, log_interval=log_interval, log_level=log_level)
+def logger_progress(
+    self: Logger,
+    iterable: Iterable | None = None,
+    total: int | None = None,
+    desc: str = '',
+    leave: bool = True,
+    unit: str = 'it',
+    log_interval: float = 1.0,
+    log_level: str = 'INFO',
+) -> LoggerProgressBar | Iterable:
+    pbar = LoggerProgressBar(
+        logger=self,
+        total=total,
+        desc=desc,
+        leave=leave,
+        unit=unit,
+        log_interval=log_interval,
+        log_level=log_level,
+    )
     setattr(self, "_active_pbar", pbar)
     if iterable is not None:
-        for obj in pbar(iterable):
-            yield obj
-        return
+        return pbar(iterable)
     return pbar

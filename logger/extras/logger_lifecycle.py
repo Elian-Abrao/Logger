@@ -28,17 +28,17 @@ def logger_log_start(self: Logger, verbose: int = 1) -> None:
     blocks = [banner]
 
     if verbose >= 1:
-        self.reset_metrics()
-        status = self.log_system_status(return_block=True)
-        env = self.log_environment(return_block=True)
+        self.reset_metrics()  # type: ignore[attr-defined]
+        status = self.log_system_status(return_block=True)  # type: ignore[attr-defined]
+        env = self.log_environment(return_block=True)  # type: ignore[attr-defined]
         blocks.extend([status, env])
 
     if verbose >= 2:
         self.debug("Registrando snapshot inicial de memória...")
-        self.memory_snapshot()
+        self.memory_snapshot()  # type: ignore[attr-defined]
 
     banner_final = combine_blocks(blocks)
-    self.success(f"\n{banner_final}", extra={"plain": True})
+    self.success(f"\n{banner_final}", extra={"plain": True})  # type: ignore[attr-defined]
 
 
 def logger_log_end(self: Logger, verbose: int = 1) -> None:
@@ -50,13 +50,13 @@ def logger_log_end(self: Logger, verbose: int = 1) -> None:
     hora = now.strftime("%H:%M:%S")
 
     if verbose >= 2:
-        self.report_metrics()
+        self.report_metrics()  # type: ignore[attr-defined]
         self.debug("Verificando possíveis vazamentos de memória...")
-        self.check_memory_leak()
+        self.check_memory_leak()  # type: ignore[attr-defined]
 
     blocks: list[str] = []
     if verbose >= 1:
-        blocks.append(self.log_system_status(return_block=True))
+        blocks.append(self.log_system_status(return_block=True))  # type: ignore[attr-defined]
 
     lines = [
         "PROCESSO FINALIZADO",
@@ -66,7 +66,7 @@ def logger_log_end(self: Logger, verbose: int = 1) -> None:
     banner = format_block("FIM", lines)
     blocks.insert(0, banner)
     banner_final = combine_blocks(blocks)
-    self.success(f"\n{banner_final}", extra={"plain": True})
+    self.success(f"\n{banner_final}", extra={"plain": True})  # type: ignore[attr-defined]
 
 
 def _setup_lifecycle(logger: Logger) -> None:

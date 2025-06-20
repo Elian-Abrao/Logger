@@ -8,7 +8,7 @@ Uso:
 from contextlib import contextmanager
 from contextvars import ContextVar
 from logging import Logger
-from typing import Callable, Any, Optional
+from typing import Callable, Any, Optional, ContextManager as TypingContextManager, Iterator
 import cProfile
 import functools
 import io
@@ -18,7 +18,7 @@ import pstats
 _original_log_method = Logger._log
 
 # Variavel de contexto global para rastreamento da pilha de contextos
-_log_context = ContextVar('log_context', default=[])
+_log_context: ContextVar[list[str]] = ContextVar('log_context', default=[])
 
 class ContextManager:
     """Gerencia contextos hierarquicos para o logger."""
@@ -39,7 +39,7 @@ class ContextManager:
 
 # --- Funcoes utilitarias ligadas ao logger ---
 
-def logger_context(self: Logger, name: str) -> contextmanager:
+def logger_context(self: Logger, name: str) -> TypingContextManager[None]:
     """Adiciona contexto temporario aos logs."""
     @contextmanager
     def context_wrapper():
@@ -82,17 +82,22 @@ class Profiler:
 # --- Wrappers de profiling ---
 
 @contextmanager
-def logger_profile_cm(self: Logger, name: str = None):
+def logger_profile_cm(self: Logger, name: str | None = None) -> Iterator[None]:
     section_name = name or 'Seção'
     self.info(f"🔍 Iniciando profiling: {section_name}")
-    self._profiler.start()
+    self._profiler.start()  # type: ignore[attr-defined]
     try:
         yield
     finally:
-        report = self._profiler.stop()
+        report = self._profiler.stop()  # type: ignore[attr-defined]
         self.info(f"📊 Resultado do profiling ({section_name}):\n{report}")
 
-def logger_profile(self: Logger, func: Optional[Callable] = None, *, name: str = None) -> Any:
+def logger_profile(
+    self: Logger,
+    func: Optional[Callable] = None,
+    *,
+    name: str | None = None,
+) -> Any:
     if func is None:
         return logger_profile_cm(self, name)
     @functools.wraps(func)
@@ -103,7 +108,7 @@ def logger_profile(self: Logger, func: Optional[Callable] = None, *, name: str =
 
 def _setup_context_and_profiling(logger: Logger) -> None:
     """Configura suporte a contexto e profiling na instancia do logger."""
-    context_manager = ContextManager()
+    context_manager: ContextManager = ContextManager()
     profiler = Profiler()
 
     # guarda instancias no logger
@@ -115,7 +120,7 @@ def _setup_context_and_profiling(logger: Logger) -> None:
         setattr(logger, '_original_log', _original_log_method)
 
     # Aplica wrappers na classe para permitir uso pelos loggers criados
-    Logger._log = log_with_context
+    Logger._log = log_with_context  # type: ignore[assignment]
     setattr(Logger, 'context', logger_context)
     setattr(Logger, 'profile', logger_profile)
     setattr(Logger, 'profile_cm', logger_profile_cm)

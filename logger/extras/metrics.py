@@ -25,12 +25,12 @@ class MetricsTracker:
 
 def logger_reset_metrics(self: Logger) -> None:
     """Reseta o temporizador de métricas ligado ao logger."""
-    self._metrics.reset()
+    self._metrics.reset()  # type: ignore[attr-defined]
 
 
 def logger_report_metrics(self: Logger, level: str = "INFO") -> None:
     """Registra o tempo decorrido no nível de log especificado."""
-    duration = self._metrics.report()
+    duration = self._metrics.report()  # type: ignore[attr-defined]
     msg = f"⏱️ Duração total: {duration:.1f}s"
     getattr(self, level.lower())(msg)
 
