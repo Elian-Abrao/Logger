@@ -149,7 +149,8 @@ def logger_profile_report(
     level: str = "INFO",
     return_block: bool = False,
 ) -> str | None:
-    """Gera um resumo do profiling executado com rótulos em português."""
+    """Gera um resumo do profiling executado."""
+    
     self._profiler.stop()  # type: ignore[attr-defined]
     lines = self._profiler.get_report_lines(limit)  # type: ignore[attr-defined]
     if not lines:
@@ -157,6 +158,7 @@ def logger_profile_report(
     block = format_block("PROFILING", lines)
     if return_block:
         return block
+      
     getattr(self, level.lower())(f"\n{block}", extra={"plain": True, "file_only": True})
     return None
 

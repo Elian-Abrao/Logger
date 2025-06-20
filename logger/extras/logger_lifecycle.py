@@ -70,6 +70,7 @@ def logger_log_end(self: Logger, verbose: int = 1) -> None:
         blocks.append(self.check_connectivity(return_block=True))  # type: ignore[attr-defined]
     if leak_block:
         blocks.append(leak_block)
+
     if profile_summary:
         blocks.append(profile_summary)
 
