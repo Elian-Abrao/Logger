@@ -122,6 +122,7 @@ def logger_check_memory_leak(
     if memory_diff < mem_threshold and not obj_diff:
         return None
 
+
     lines = [f"Diferença de memória: {memory_diff:.1f}MB"]
     for name, diff in obj_diff.items():
         lines.append(f"{name}: {diff:+d}")

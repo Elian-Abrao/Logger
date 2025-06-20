@@ -76,6 +76,7 @@ def logger_check_memory_leak(
     show_all: bool | None = ...,
     watch: Iterable[str] | None = ...,
     mem_threshold: float | None = ...,
+
 ) -> str | None: ...
 
 def logger_sleep(self: Logger, duration: float, unit: str = ..., level: str = ..., message: str | None = ...) -> None: ...

@@ -89,6 +89,7 @@ class StructuredLogger(Logger):
         show_all: bool | None = None,
         watch: Iterable[str] | None = None,
         mem_threshold: float | None = None,
+
     ) -> str | None:
         """Verifica diferenças de uso de memória indicando possível vazamento."""
         ...
