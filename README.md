@@ -4,10 +4,11 @@ Biblioteca de logging estruturado. Veja `main.py` para um exemplo completo.
 
 ## Instalação
 
-Com o Python instalado, instale as dependências:
+Com o Python instalado, instale o pacote e suas dependências em modo de
+desenvolvimento:
 
 ```bash
-pip install -r requirements.txt
+pip install -e .
 ```
 
 ## Uso básico

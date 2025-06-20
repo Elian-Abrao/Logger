@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "logger"
+version = "0.1.0"
+description = "Structured logging utilities"
+readme = "README.md"
+authors = [{name = "Elian Abrão"}]
+license = {file = "LICENSE"}
+requires-python = ">=3.8"
+dependencies = [
+    "colorama",
+    "psutil",
+    "requests",
+    "wcwidth",
+    "pyautogui",
+]
+
+[project.scripts]
+logger-demo = "main:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["logger*"]
+
