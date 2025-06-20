@@ -1,7 +1,6 @@
 import logging
 from types import SimpleNamespace
 
-import pytest
 
 from logger import start_logger
 from logger.extras.dependency import DependencyManager
