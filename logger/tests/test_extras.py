@@ -9,6 +9,7 @@ import logger.extras.dependency as dependency_mod
 import logger.extras.network as network_mod
 import logger.extras.metrics as metrics
 import logger.extras.utils.timer as timer_utils
+import logger.extras.monitoring as monitoring_mod
 
 
 def test_dependency_manager_cache(monkeypatch):
@@ -152,4 +153,26 @@ def test_connectivity_block_in_banners(tmp_path, caplog, monkeypatch):
     assert calls == [True, True]
     messages = ' '.join(rec.message for rec in caplog.records)
     assert messages.count('CONNECT') == 2
+
+
+def test_start_logger_calls_memory_snapshot(tmp_path, monkeypatch):
+    called = {'n': 0}
+
+    def fake_snapshot(self):
+        called['n'] += 1
+
+    monkeypatch.setattr(monitoring_mod, 'logger_memory_snapshot', fake_snapshot)
+
+    logger = start_logger('mem', log_dir=str(tmp_path), console_level='INFO')
+    assert called['n'] == 1
+    logger.end()
+
+
+def test_memory_leak_block_in_banner(tmp_path, caplog):
+    logger = start_logger('leak', log_dir=str(tmp_path), console_level='INFO')
+    logger._monitor.get_memory_diff = lambda: (5.0, {'Obj': 2})
+    with caplog.at_level(logging.INFO):
+        logger.end()
+
+    assert any('VAZAMENTO DE MEMÓRIA' in rec.message for rec in caplog.records)
 

@@ -51,15 +51,18 @@ def logger_log_end(self: Logger, verbose: int = 1) -> None:
     data = now.strftime("%d/%m/%Y")
     hora = now.strftime("%H:%M:%S")
 
+    leak_block: str | None = None
     if verbose >= 2:
         self.report_metrics()  # type: ignore[attr-defined]
         self.debug("Verificando possíveis vazamentos de memória...")
-        self.check_memory_leak()  # type: ignore[attr-defined]
+    leak_block = self.check_memory_leak(return_block=True)  # type: ignore[attr-defined]
 
     blocks: list[str] = []
     if verbose >= 1:
         blocks.append(self.log_system_status(return_block=True))  # type: ignore[attr-defined]
         blocks.append(self.check_connectivity(return_block=True))  # type: ignore[attr-defined]
+    if leak_block:
+        blocks.append(leak_block)
 
     lines = [
         "PROCESSO FINALIZADO",
