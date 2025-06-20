@@ -13,6 +13,7 @@ import cProfile
 import functools
 import io
 import pstats
+from logger.extras.progress import format_block
 
 # Armazena o método original de logging antes de qualquer monkey patch
 _original_log_method = Logger._log
@@ -79,6 +80,15 @@ class Profiler:
         ps.print_stats(20)
         return s.getvalue()
 
+    def get_report_lines(self, limit: int = 10) -> list[str]:
+        """Retorna linhas resumidas do profiling ordenadas por tempo acumulado."""
+        if not self.profiler:
+            return []
+        s = io.StringIO()
+        ps = pstats.Stats(self.profiler, stream=s).sort_stats('cumulative')
+        ps.print_stats(limit)
+        return s.getvalue().strip().splitlines()
+
 # --- Wrappers de profiling ---
 
 @contextmanager
@@ -106,6 +116,25 @@ def logger_profile(
             return func(*args, **kwargs)
     return wrapper
 
+
+def logger_profile_report(
+    self: Logger,
+    *,
+    limit: int = 10,
+    level: str = "INFO",
+    return_block: bool = False,
+) -> str | None:
+    """Gera um resumo do profiling executado."""
+    self._profiler.stop()  # type: ignore[attr-defined]
+    lines = self._profiler.get_report_lines(limit)  # type: ignore[attr-defined]
+    if not lines:
+        return None
+    block = format_block("PROFILING", lines)
+    if return_block:
+        return block
+    getattr(self, level.lower())(f"\n{block}")
+    return None
+
 def _setup_context_and_profiling(logger: Logger) -> None:
     """Configura suporte a contexto e profiling na instancia do logger."""
     context_manager: ContextManager = ContextManager()
@@ -124,3 +153,4 @@ def _setup_context_and_profiling(logger: Logger) -> None:
     setattr(Logger, 'context', logger_context)
     setattr(Logger, 'profile', logger_profile)
     setattr(Logger, 'profile_cm', logger_profile_cm)
+    setattr(Logger, 'profile_report', logger_profile_report)
