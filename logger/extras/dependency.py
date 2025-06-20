@@ -42,7 +42,7 @@ class DependencyManager:
         return info
 
 def logger_log_environment(self: Logger, level: str = 'INFO', return_block: bool = False) -> str | None:
-    info = self._dep_manager.get_environment_info()
+    info = self._dep_manager.get_environment_info()  # type: ignore[attr-defined]
     log_method = getattr(self, level.lower())
     linhas = [
         f"Python {info['python']['version']} ({info['python']['implementation']})",
@@ -57,3 +57,4 @@ def logger_log_environment(self: Logger, level: str = 'INFO', return_block: bool
     if return_block:
         return bloco
     log_method(f"\n{bloco}")
+    return None

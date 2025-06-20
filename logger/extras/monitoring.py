@@ -52,18 +52,19 @@ class SystemMonitor:
         current_memory = self.get_memory_usage()[0]
         memory_diff = current_memory - self._baseline_memory
         current_counts = self._count_objects()
+        baseline_counts: Dict[str, int] = self._object_counts or {}
         diff = {
-            name: current_counts.get(name, 0) - self._object_counts.get(name, 0)
-            for name in set(current_counts) | set(self._object_counts or {})
-            if current_counts.get(name, 0) != self._object_counts.get(name, 0)
+            name: current_counts.get(name, 0) - baseline_counts.get(name, 0)
+            for name in set(current_counts) | set(baseline_counts)
+            if current_counts.get(name, 0) != baseline_counts.get(name, 0)
         }
         return memory_diff, diff
 
 
 def logger_log_system_status(self: Logger, level: str = "INFO", return_block: bool = False) -> str | None:
     """Loga o status atual de CPU e memória."""
-    proc_mem, sys_mem = self._monitor.get_memory_usage()
-    proc_cpu, sys_cpu = self._monitor.get_cpu_usage()
+    proc_mem, sys_mem = self._monitor.get_memory_usage()  # type: ignore[attr-defined]
+    proc_cpu, sys_cpu = self._monitor.get_cpu_usage()  # type: ignore[attr-defined]
     lines = [
         f"CPU: Processo {proc_cpu:.1f}% • Sistema: {sys_cpu:.1f}%",
         f"Memória: {proc_mem:.1f}MB • Sistema: {sys_mem:.1f}%",
@@ -72,17 +73,18 @@ def logger_log_system_status(self: Logger, level: str = "INFO", return_block: bo
     if return_block:
         return block
     getattr(self, level.lower())(f"\n{block}")
+    return None
 
 
 def logger_memory_snapshot(self: Logger) -> None:
     """Armazena um snapshot de memória para comparação futura."""
-    self._monitor.take_memory_snapshot()
+    self._monitor.take_memory_snapshot()  # type: ignore[attr-defined]
     self.debug("Snapshot de memória registrado")
 
 
 def logger_check_memory_leak(self: Logger, level: str = "WARNING") -> None:
     """Verifica diferenças de uso de memória indicando possível vazamento."""
-    memory_diff, obj_diff = self._monitor.get_memory_diff()
+    memory_diff, obj_diff = self._monitor.get_memory_diff()  # type: ignore[attr-defined]
     if not memory_diff and not obj_diff:
         return
     lines = [f"Diferença de memória: {memory_diff:.1f}MB"]

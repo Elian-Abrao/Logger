@@ -35,7 +35,7 @@ _INTERNAL_FUNCS = {
 }
 
 # Contexto para filtragem de funcoes internas
-_log_context = ContextVar('log_context', default=[])
+_log_context: ContextVar[list[str]] = ContextVar('log_context', default=[])
 
 class CustomFormatter(Formatter):
     """Formatter com emojis e cores para saida humanizada."""
@@ -127,7 +127,7 @@ def _extract_call_chain(record) -> str:
         if not filename.endswith('.py'):
             continue
         chain.append(func)
-    unique = []
+    unique: list[str] = []
     for f in reversed(chain):
         if not unique or unique[-1] != f:
             unique.append(f)

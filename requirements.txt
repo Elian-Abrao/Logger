@@ -3,5 +3,11 @@ psutil
 requests
 wcwidth
 setuptools
+# typing stubs
+types-colorama
+types-psutil
+types-requests
+types-PyAutoGUI
+types-setuptools
 # optional dependencies
 pyautogui
