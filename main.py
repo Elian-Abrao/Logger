@@ -13,7 +13,7 @@ def main():
         logger.debug("testeee")
 
     print("Mensagem exemplo")
-    logger.end()
+
 
 if __name__ == "__main__":
     main()

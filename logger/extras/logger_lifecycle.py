@@ -1,6 +1,7 @@
 """logger_lifecycle.py - Funções de início e término do logger."""
 
 from logging import Logger
+import atexit
 from pathlib import Path
 from datetime import datetime
 import os
@@ -68,8 +69,22 @@ def logger_log_end(self: Logger, verbose: int = 1) -> None:
     banner_final = combine_blocks(blocks)
     self.success(f"\n{banner_final}", extra={"plain": True})  # type: ignore[attr-defined]
 
+    setattr(self, "_end_called", True)
+
 
 def _setup_lifecycle(logger: Logger) -> None:
     """Acopla funções de ciclo de vida ao ``Logger``."""
     setattr(Logger, "start", logger_log_start)
     setattr(Logger, "end", logger_log_end)
+
+    # Flag para evitar múltiplas execuções de ``end``
+    setattr(logger, "_end_called", False)
+
+    def _auto_end() -> None:
+        if not getattr(logger, "_end_called", False):
+            try:
+                logger.end()  # type: ignore[attr-defined]
+            except Exception:
+                pass
+
+    atexit.register(_auto_end)
