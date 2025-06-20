@@ -15,6 +15,16 @@ import io
 import pstats
 from logger.extras.progress import format_block
 
+# Funcoes internas ignoradas na cadeia de profiling
+_INTERNAL_FUNCS = {
+    'format', '_extract_call_chain', '_init_colorama',
+    '_define_custom_levels', '_setup_directories', '_get_log_filename',
+    '_attach_screenshot', 'screen', 'logger_progress', '__call__',
+    '_log_progress', 'log_with_context', '_log_start', '_log_end',
+    'emit', 'logger_profile', 'logger_profile_cm', 'logger_profile_report',
+    'logger_log_start', 'logger_log_end'
+}
+
 # Armazena o método original de logging antes de qualquer monkey patch
 _original_log_method = Logger._log
 
@@ -94,6 +104,19 @@ class Profiler:
         best = max(callers.items(), key=lambda kv: kv[1][3])[0]
         return self._build_chain(best, stats, depth - 1) + [func]
 
+    def _is_internal(self, func: tuple[str, int, str]) -> bool:
+        filename, _lineno, name = func
+        path = filename.replace("\\", "/")
+        if name in _INTERNAL_FUNCS:
+            return True
+        if any(part in path for part in ("logging", "inspect", "colorama", "threading")):
+            return True
+        if "logger/" in path:
+            return True
+        if not path.endswith(".py"):
+            return True
+        return False
+
     def get_report_lines(self, limit: int = 10) -> list[str]:
         """Linhas de profiling ordenadas por tempo acumulado em português."""
         if not self.profiler:
@@ -107,7 +130,9 @@ class Profiler:
         items.sort(reverse=True)
         lines = []
         for ct, tt, nc, func in items[:limit]:
-            chain = self._build_chain(func, stats_dict)
+            chain = [f for f in self._build_chain(func, stats_dict) if not self._is_internal(f)]
+            if not chain:
+                chain = [func]
             names = " → ".join(f[2] for f in chain)
             lines.append(
                 f"{names} | chamadas: {nc} | acumulado: {ct:.3f}s | próprio: {tt:.3f}s"
