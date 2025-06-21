@@ -2,12 +2,16 @@
 
 ![CI](https://github.com/Elian-Abrao/Logger/actions/workflows/ci.yml/badge.svg)
 
-Biblioteca de logging estruturado. Veja `main.py` para um exemplo completo.
+Biblioteca de logging estruturado com barra de progresso, métricas e monitoramento.
+
+## Sumário
+
+- [Instalação](#instala%c3%a7%c3%a3o)
+- [Uso básico](#uso-b%c3%a1sico)
+- [Testes e qualidade](#testes-e-qualidade)
+- [Documentação](#documenta%c3%a7%c3%a3o)
 
 ## Instalação
-
-Com o Python instalado, instale o pacote e suas dependências em modo de
-desenvolvimento:
 
 ```bash
 pip install -e .[dev]
@@ -15,44 +19,18 @@ pip install -e .[dev]
 
 ## Uso básico
 
-Crie uma instância do logger chamando `start_logger`:
-
 ```python
 from logger import start_logger
 
 logger = start_logger("Demo")
 logger.info("Processo iniciado")
+for i in logger.progress(range(5), desc="Trabalhando"):
+    logger.debug(f"Passo {i}")
 ```
 
-O método ``logger.end()`` é chamado automaticamente ao término do programa, mas pode ser invocado manualmente caso deseje encerrar o logger antecipadamente. Ao finalizar, um banner de resumo exibe métricas.
-O detalhamento completo do profiling, com cadeia de chamadas e tempos, é registrado apenas nos arquivos de log.
+`logger.end()` é chamado automaticamente no encerramento do programa, exibindo um banner resumo.
 
-
-Para mais exemplos consulte `main.py`.
-
-## Testes e qualidade de código
-
-Instale as dependências do projeto com:
-
-```bash
-pip install -e .[dev]
-```
-
-Para reproduzir exatamente o ambiente utilizado, instale a partir do arquivo
-`requirements.lock` gerado via `pip freeze`:
-
-```bash
-pip install -r requirements.lock
-```
-
-Sempre que atualizar as dependências, execute:
-
-```bash
-pip freeze > requirements.lock
-```
-para sincronizar o arquivo de lock.
-
-Com as dependências instaladas, execute as ferramentas de verificação:
+## Testes e qualidade
 
 ```bash
 ruff check .
@@ -64,21 +42,8 @@ safety check -r requirements.lock || true
 
 ## Documentação
 
-A documentação completa é gerada com **Sphinx** e publicada automaticamente no
-GitHub Pages. Para gerar a versão local instale o Sphinx e execute:
-
-```bash
-pip install sphinx
-```
+Os guias completos estão em [docs/md/index.md](docs/md/index.md). Para gerar o site Sphinx localmente:
 
 ```bash
 make -C docs html
 ```
-
-Para gerar os pacotes de distribuição execute:
-
-```bash
-python -m build
-```
-
-Os arquivos HTML serão gerados em `docs/build/html`.
