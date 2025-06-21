@@ -49,3 +49,18 @@ ruff check .
 mypy .
 pytest -q
 ```
+
+## Documentação
+
+A documentação completa é gerada com **Sphinx** e publicada automaticamente no
+GitHub Pages. Para gerar a versão local instale o Sphinx e execute:
+
+```bash
+pip install sphinx
+```
+
+```bash
+make -C docs html
+```
+
+Os arquivos HTML serão gerados em `docs/build/html`.
