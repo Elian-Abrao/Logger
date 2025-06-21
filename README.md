@@ -1,5 +1,7 @@
 # Logger
 
+![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)
+
 Biblioteca de logging estruturado. Veja `main.py` para um exemplo completo.
 
 ## Instalação
