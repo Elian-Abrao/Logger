@@ -70,6 +70,11 @@ class NetworkMonitor:
             self.metrics[domain]['total_errors'] += 1
             self.logger.error(f"Erro ao acessar {url}: {exc}")
             return {'error': str(exc), 'type': type(exc).__name__}
+        except Exception as exc:  # pragma: no cover - unforeseen errors
+            domain = urlparse(url).netloc
+            self.metrics[domain]['total_errors'] += 1
+            self.logger.exception(f"Falha inesperada ao acessar {url}: {exc}")
+            return {'error': str(exc), 'type': 'Exception'}
 
 def logger_check_connectivity(
     self: Logger,
