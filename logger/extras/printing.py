@@ -2,6 +2,7 @@
 
 import builtins
 import sys
+from contextlib import contextmanager
 from logging import Logger
 
 class PrintCapture:
@@ -49,4 +50,14 @@ def logger_capture_prints(self: Logger, active: bool = True, level: str = 'INFO'
     if active:
         print_capture.start_capture(self, level=level, prefix=prefix)
     else:
+        print_capture.stop_capture()
+
+
+@contextmanager
+def capture_prints(self: Logger, level: str = 'INFO', prefix: str = '❌ Evite o Uso de Print(): '):
+    """Capture calls to ``print`` within a context and restore on exit."""
+    print_capture.start_capture(self, level=level, prefix=prefix)
+    try:
+        yield
+    finally:
         print_capture.stop_capture()

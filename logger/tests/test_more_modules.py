@@ -9,6 +9,10 @@ from logger.extras.dependency import DependencyManager
 from logger.core.logger_core import _configure_base_logger
 
 
+def _no_profiler_start(self):
+    pass
+
+
 # ----------------------- Network module tests -----------------------
 
 def test_check_connection_success_and_failure(monkeypatch):
@@ -37,7 +41,8 @@ def test_check_connection_success_and_failure(monkeypatch):
     assert lat is None
 
 
-def test_logger_get_network_metrics_average(tmp_path):
+def test_logger_get_network_metrics_average(tmp_path, monkeypatch):
+    monkeypatch.setattr('logger.core.context.Profiler.start', _no_profiler_start)
     logger = start_logger("avg", log_dir=str(tmp_path), console_level="CRITICAL")
     nm = network_mod.NetworkMonitor()
     metrics = nm.metrics["site.com"]
