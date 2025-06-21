@@ -16,7 +16,10 @@ from .progress import (
     format_block as format_block,
     combine_blocks as combine_blocks,
 )
-from .printing import logger_capture_prints as logger_capture_prints
+from .printing import (
+    logger_capture_prints as logger_capture_prints,
+    capture_prints as capture_prints,
+)
 from .helpers import (
     _init_colorama as _init_colorama,
     _setup_directories as _setup_directories,
@@ -57,6 +60,7 @@ __all__ = [
     "format_block",
     "combine_blocks",
     "logger_capture_prints",
+    "capture_prints",
     "_init_colorama",
     "_setup_directories",
     "_get_log_filename",

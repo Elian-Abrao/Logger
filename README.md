@@ -1,6 +1,6 @@
 # Logger
 
-![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/Elian-Abrao/Logger/actions/workflows/ci.yml/badge.svg)
 
 Biblioteca de logging estruturado. Veja `main.py` para um exemplo completo.
 
@@ -10,7 +10,7 @@ Com o Python instalado, instale o pacote e suas dependências em modo de
 desenvolvimento:
 
 ```bash
-pip install -e .
+pip install -e .[dev]
 ```
 
 ## Uso básico
@@ -35,13 +35,7 @@ Para mais exemplos consulte `main.py`.
 Instale as dependências do projeto com:
 
 ```bash
-pip install -e .
-```
-
-Ou, se preferir, utilize o arquivo de requisitos:
-
-```bash
-pip install -r requirements.txt
+pip install -e .[dev]
 ```
 
 Para reproduzir exatamente o ambiente utilizado, instale a partir do arquivo
@@ -54,7 +48,6 @@ pip install -r requirements.lock
 Sempre que atualizar as dependências, execute:
 
 ```bash
-pip install -r requirements.txt
 pip freeze > requirements.lock
 ```
 para sincronizar o arquivo de lock.
@@ -64,7 +57,9 @@ Com as dependências instaladas, execute as ferramentas de verificação:
 ```bash
 ruff check .
 mypy .
-pytest -q
+pytest --cov=logger
+bandit -r logger
+safety check -r requirements.lock || true
 ```
 
 ## Documentação
@@ -78,6 +73,12 @@ pip install sphinx
 
 ```bash
 make -C docs html
+```
+
+Para gerar os pacotes de distribuição execute:
+
+```bash
+python -m build
 ```
 
 Os arquivos HTML serão gerados em `docs/build/html`.

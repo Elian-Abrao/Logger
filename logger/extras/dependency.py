@@ -5,7 +5,7 @@ Contem a classe ``DependencyManager`` e funcoes de log relacionadas.
 
 from typing import Optional, Dict, Any
 import platform
-import pkg_resources
+import pkg_resources  # type: ignore
 import time
 from logging import Logger
 from .progress import format_block  # will use relative import; but we haven't created progress yet

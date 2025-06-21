@@ -5,6 +5,7 @@ from types import SimpleNamespace
 from logger import start_logger
 from logger.extras.dependency import DependencyManager
 from logger.extras.network import NetworkMonitor
+from logger.extras import capture_prints
 import requests
 import logger.extras.dependency as dependency_mod
 import logger.extras.network as network_mod
@@ -100,6 +101,32 @@ def test_network_monitor_connection_error(monkeypatch):
     assert metrics['total_errors'] == 1
 
 
+def test_network_monitor_name_resolution_error(monkeypatch, caplog):
+    nm = NetworkMonitor()
+
+    def fake_get(url, timeout=1.0):
+        raise requests.exceptions.ConnectionError(
+            "HTTPSConnectionPool(host='x', port=443): Max retries exceeded with url: / (Caused by NameResolutionError('fail'))"
+        )
+
+    monkeypatch.setattr(network_mod.requests, 'get', fake_get)
+    with caplog.at_level(logging.WARNING):
+        result = nm.measure_latency('http://example.com')
+    assert result['error'] == 'sem conectividade'
+    assert 'Sem conectividade' in caplog.text
+
+
+def test_network_monitor_generic_exception(monkeypatch):
+    nm = NetworkMonitor()
+
+    def fake_get(url, timeout=1.0):
+        raise RuntimeError('boom')
+
+    monkeypatch.setattr(network_mod.requests, 'get', fake_get)
+    result = nm.measure_latency('http://example.com')
+    assert result['type'] == 'Exception'
+
+
 def test_logger_check_connectivity_and_metrics(tmp_path, caplog, monkeypatch):
     logger = start_logger('net', log_dir=str(tmp_path), console_level='INFO')
 
@@ -115,6 +142,23 @@ def test_logger_check_connectivity_and_metrics(tmp_path, caplog, monkeypatch):
 
     metrics = logger.get_network_metrics('example.com')
     assert metrics['average_latency'] == 30.0
+    logger.end()
+
+
+def test_logger_check_connectivity_offline(tmp_path, caplog, monkeypatch):
+    logger = start_logger('off', log_dir=str(tmp_path), console_level='INFO')
+
+    dummy_nm = SimpleNamespace()
+    dummy_nm.check_connection = lambda host='8.8.8.8', port=53, timeout=1.0: (False, None)
+    dummy_nm.measure_latency = lambda url, timeout=1.0: {'latency': 1.0}
+    monkeypatch.setattr(logger, '_net_monitor', dummy_nm, raising=False)
+
+    with caplog.at_level(logging.INFO):
+        logger.check_connectivity(['http://example.com'])
+
+    msgs = ' '.join(rec.message for rec in caplog.records)
+    assert 'Sem conexão com a internet' in msgs
+    assert 'example.com' not in msgs
     logger.end()
 
 
@@ -220,3 +264,18 @@ def test_memory_leak_watch_object(tmp_path, caplog):
         logger.end()
 
     assert any('X:' in r.message for r in caplog.records)
+
+
+def test_capture_prints_restores_on_exception(tmp_path):
+    logger = start_logger('print', log_dir=str(tmp_path), console_level='CRITICAL', capture_prints=False)
+    logger.capture_prints(False)
+    import builtins
+    original = builtins.print
+    try:
+        with capture_prints(logger):
+            assert builtins.print is not original
+            raise RuntimeError('boom')
+    except RuntimeError:
+        pass
+    assert builtins.print is original
+    logger.end()

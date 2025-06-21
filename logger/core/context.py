@@ -11,7 +11,6 @@ from logging import Logger
 from typing import Callable, Any, Optional, ContextManager as TypingContextManager, Iterator
 import inspect
 from pathlib import Path
-from colorama import Fore, Style
 import cProfile
 import functools
 import io

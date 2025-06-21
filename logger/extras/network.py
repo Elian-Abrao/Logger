@@ -63,13 +63,24 @@ class NetworkMonitor:
         except requests.exceptions.ConnectionError as exc:
             domain = urlparse(url).netloc
             self.metrics[domain]['total_errors'] += 1
-            self.logger.error(f"Erro de conexão ao acessar {url}: {exc}")
-            return {'error': str(exc), 'type': 'ConnectionError'}
+            msg = str(exc)
+            if "NameResolutionError" in msg or "getaddrinfo failed" in msg:
+                self.logger.warning(
+                    f"Sem conectividade para resolver {domain}: {msg}"
+                )
+                return {"error": "sem conectividade", "type": "ConnectionError"}
+            self.logger.error(f"Erro de conexão ao acessar {url}: {msg}")
+            return {"error": msg, "type": "ConnectionError"}
         except requests.RequestException as exc:
             domain = urlparse(url).netloc
             self.metrics[domain]['total_errors'] += 1
             self.logger.error(f"Erro ao acessar {url}: {exc}")
             return {'error': str(exc), 'type': type(exc).__name__}
+        except Exception as exc:  # pragma: no cover - unforeseen errors
+            domain = urlparse(url).netloc
+            self.metrics[domain]['total_errors'] += 1
+            self.logger.exception(f"Falha inesperada ao acessar {url}: {exc}")
+            return {'error': str(exc), 'type': 'Exception'}
 
 def logger_check_connectivity(
     self: Logger,
@@ -86,6 +97,11 @@ def logger_check_connectivity(
         linhas.append(f"Status: Conectado • Latência: {latency:.1f}ms")
     else:
         linhas.append("Sem conexão com a internet")
+        bloco = format_block("CONECTIVIDADE", linhas)
+        if return_block:
+            return bloco
+        log_method(f"\n{bloco}")
+        return None
 
     urls_list: list[str]
     if urls is None:
