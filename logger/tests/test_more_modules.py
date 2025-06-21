@@ -1,7 +1,6 @@
 import logging
 from pathlib import Path
 
-import pytest
 
 from logger import start_logger
 from logger.extras import network as network_mod
@@ -89,7 +88,7 @@ def test_system_monitor_diff_without_snapshot(monkeypatch):
 def _info_fmt(logger: logging.Logger) -> str:
     for h in logger.handlers:
         if isinstance(h, logging.FileHandler) and h.level == logging.INFO:
-            return h.formatter._fmt  # type: ignore[attr-defined]
+            return str(h.formatter._fmt)  # type: ignore[attr-defined, union-attr]
     raise AssertionError("info handler not found")
 
 

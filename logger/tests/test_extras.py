@@ -100,6 +100,17 @@ def test_network_monitor_connection_error(monkeypatch):
     assert metrics['total_errors'] == 1
 
 
+def test_network_monitor_generic_exception(monkeypatch):
+    nm = NetworkMonitor()
+
+    def fake_get(url, timeout=1.0):
+        raise RuntimeError('boom')
+
+    monkeypatch.setattr(network_mod.requests, 'get', fake_get)
+    result = nm.measure_latency('http://example.com')
+    assert result['type'] == 'Exception'
+
+
 def test_logger_check_connectivity_and_metrics(tmp_path, caplog, monkeypatch):
     logger = start_logger('net', log_dir=str(tmp_path), console_level='INFO')
 

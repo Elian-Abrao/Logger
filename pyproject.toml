@@ -25,10 +25,28 @@ dependencies = [
     "pyautogui>=0.9,<1.0",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "ruff",
+    "mypy",
+    "pytest",
+    "pytest-cov",
+    "bandit",
+    "safety",
+    "build",
+    "sphinx",
+]
+
 [project.scripts]
 logger-demo = "main:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["logger*"]
+
+[tool.setuptools.package-data]
+"logger" = ["*.pyi"]
+
+[tool.mypy]
+ignore_missing_imports = true
 
