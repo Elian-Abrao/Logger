@@ -67,7 +67,17 @@ class CustomFormatter(Formatter):
             return record.getMessage()
         original_levelname = record.levelname
         original_levelname_color = getattr(record, 'levelname_color', None)
+        original_msg = record.msg
+        original_args = record.args
         try:
+            context = getattr(record, 'context', '')
+            if context:
+                ctx_disp = (
+                    f"{Fore.LIGHTYELLOW_EX}{context}{Style.RESET_ALL}"
+                    if self.use_color else context
+                )
+                record.msg = f"[{ctx_disp}] {record.getMessage()}"
+                record.args = ()
             record.emoji = self.LEVEL_EMOJI.get(original_levelname, '🔹')
             color = self.LEVEL_COLOR.get(original_levelname, '') if self.use_color else ''
             suffix = Style.RESET_ALL if self.use_color and color else ''
@@ -88,6 +98,8 @@ class CustomFormatter(Formatter):
                 mensagem_formatada += f" {record.meta}"
             return mensagem_formatada
         finally:
+            record.msg = original_msg
+            record.args = original_args
             record.levelname = original_levelname
             if original_levelname_color is not None:
                 record.levelname_color = original_levelname_color

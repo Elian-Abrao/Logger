@@ -13,9 +13,11 @@ from types import ModuleType
 
 pyautogui: ModuleType | None
 try:
-    import pyautogui  # pragma: no cover - dependência opcional
+    import pyautogui as _pyautogui  # pragma: no cover - dependência opcional
 except Exception:  # pragma: no cover - ambiente sem a lib
-    pyautogui = None
+    _pyautogui = None
+
+pyautogui: ModuleType | None = _pyautogui
 
 
 def _init_colorama() -> None:

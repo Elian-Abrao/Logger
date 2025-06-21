@@ -88,11 +88,12 @@ def log_with_context(self: Logger, level, msg, args, **kwargs):
     file_ctx = _get_file_context()
     if file_ctx:
         contexts.append(file_ctx)
-    if contexts:
-        colored = [f"{Fore.LIGHTYELLOW_EX}{c}{Style.RESET_ALL}" for c in contexts]
-        msg = f"[{' → '.join(colored)}] {msg}"
-    original = getattr(self, '_original_log', _original_log_method)
-    original(self, level, msg, args, **kwargs)
+    context_str = " → ".join(contexts) if contexts else ""
+    extra = kwargs.pop("extra", {}) or {}
+    if context_str:
+        extra = {**extra, "context": context_str}
+    original = getattr(self, "_original_log", _original_log_method)
+    original(self, level, msg, args, extra=extra, **kwargs)
 
 class Profiler:
     """Gerenciador simples para profiling utilizando cProfile."""
