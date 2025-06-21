@@ -115,7 +115,6 @@ def test_network_monitor_name_resolution_error(monkeypatch, caplog):
     assert result['error'] == 'sem conectividade'
     assert 'Sem conectividade' in caplog.text
 
-
 def test_network_monitor_generic_exception(monkeypatch):
     nm = NetworkMonitor()
 
