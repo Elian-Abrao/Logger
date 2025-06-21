@@ -1,6 +1,7 @@
 """Exemplo de uso do logger estruturado."""
 
 from logger import start_logger
+from testesdyhfbv import teste
 
 def main():
     logger = start_logger("Demo")
@@ -11,6 +12,8 @@ def main():
         logger.success("testeee")
         logger.sleep(0.2)
         logger.debug("testeee")
+        teste()
+    teste()
 
     print("Mensagem exemplo")
 

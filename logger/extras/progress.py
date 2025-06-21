@@ -65,6 +65,12 @@ class LoggerProgressBar:
         self.last_print_time = self.start_time
         self.closed = False
         self.last_line_len = 0
+        # contexto automatico
+        self._ctx_cm = None
+        if hasattr(self.logger, "context"):
+            ctx_name = self.desc or "Loop"
+            self._ctx_cm = self.logger.context(ctx_name)
+            self._ctx_cm.__enter__()
         self._log_progress(initial=True)
 
     def update(self, n: int = 1):
@@ -88,6 +94,8 @@ class LoggerProgressBar:
             self._print_progress(final=True)
             if getattr(self.logger, "_active_pbar", None) is self:
                 setattr(self.logger, "_active_pbar", None)
+            if self._ctx_cm is not None:
+                self._ctx_cm.__exit__(None, None, None)
 
     def __enter__(self):
         return self
@@ -105,7 +113,7 @@ class LoggerProgressBar:
                     self.total = len(iterable)
                 except Exception:
                     pass
-        self._log_progress(initial=True)
+
         for obj in iterable:
             yield obj
             self.update(1)

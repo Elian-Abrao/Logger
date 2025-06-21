@@ -9,6 +9,9 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from logging import Logger
 from typing import Callable, Any, Optional, ContextManager as TypingContextManager, Iterator
+import inspect
+from pathlib import Path
+from colorama import Fore, Style
 import cProfile
 import functools
 import io
@@ -30,6 +33,22 @@ _original_log_method = Logger._log
 
 # Variavel de contexto global para rastreamento da pilha de contextos
 _log_context: ContextVar[list[str]] = ContextVar('log_context', default=[])
+
+
+def _get_file_context() -> str | None:
+    """Retorna o nome do arquivo chamador caso nao seja parte do pacote."""
+    for frame_info in inspect.stack():
+        module = frame_info.frame.f_globals.get("__name__", "")
+        if module.startswith(("logging", "inspect", "colorama", "threading")):
+            continue
+        path = frame_info.filename.replace("\\", "/")
+        if "/logger/" in path:
+            continue
+        name = Path(path).name
+        if name == "main.py":
+            return None
+        return Path(path).stem
+    return None
 
 class ContextManager:
     """Gerencia contextos hierarquicos para o logger."""
@@ -59,12 +78,19 @@ def logger_context(self: Logger, name: str) -> TypingContextManager[None]:
     return context_wrapper()
 
 def log_with_context(self: Logger, level, msg, args, **kwargs):
-    """Inclui o contexto atual nas mensagens de log se disponível."""
-    context_manager = getattr(self, '_context_manager', None)
+    """Inclui o contexto atual nas mensagens de log se disponivel."""
+    context_manager = getattr(self, "_context_manager", None)
+    contexts: list[str] = []
     if context_manager:
-        context = context_manager.get_current_context()
-        if context:
-            msg = f"[{context}] {msg}"
+        ctx = context_manager.get_current_context()
+        if ctx:
+            contexts.append(ctx)
+    file_ctx = _get_file_context()
+    if file_ctx:
+        contexts.append(file_ctx)
+    if contexts:
+        colored = [f"{Fore.LIGHTYELLOW_EX}{c}{Style.RESET_ALL}" for c in contexts]
+        msg = f"[{' → '.join(colored)}] {msg}"
     original = getattr(self, '_original_log', _original_log_method)
     original(self, level, msg, args, **kwargs)
 
