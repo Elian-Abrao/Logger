@@ -10,8 +10,6 @@ from datetime import datetime
 from logging import Logger
 from colorama import init
 from types import ModuleType
-
-pyautogui: ModuleType | None
 try:
     import pyautogui as _pyautogui  # pragma: no cover - dependência opcional
 except Exception:  # pragma: no cover - ambiente sem a lib

@@ -1,13 +1,16 @@
 import logging
 from pathlib import Path
 
-import pytest
 
 from logger import start_logger
 from logger.extras import network as network_mod
 from logger.extras import monitoring as monitoring_mod
 from logger.extras.dependency import DependencyManager
 from logger.core.logger_core import _configure_base_logger
+
+
+def _no_profiler_start(self):
+    pass
 
 
 # ----------------------- Network module tests -----------------------
@@ -38,7 +41,8 @@ def test_check_connection_success_and_failure(monkeypatch):
     assert lat is None
 
 
-def test_logger_get_network_metrics_average(tmp_path):
+def test_logger_get_network_metrics_average(tmp_path, monkeypatch):
+    monkeypatch.setattr('logger.core.context.Profiler.start', _no_profiler_start)
     logger = start_logger("avg", log_dir=str(tmp_path), console_level="CRITICAL")
     nm = network_mod.NetworkMonitor()
     metrics = nm.metrics["site.com"]
@@ -89,7 +93,7 @@ def test_system_monitor_diff_without_snapshot(monkeypatch):
 def _info_fmt(logger: logging.Logger) -> str:
     for h in logger.handlers:
         if isinstance(h, logging.FileHandler) and h.level == logging.INFO:
-            return h.formatter._fmt  # type: ignore[attr-defined]
+            return str(h.formatter._fmt)  # type: ignore[attr-defined, union-attr]
     raise AssertionError("info handler not found")
 
 

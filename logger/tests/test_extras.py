@@ -5,6 +5,7 @@ from types import SimpleNamespace
 from logger import start_logger
 from logger.extras.dependency import DependencyManager
 from logger.extras.network import NetworkMonitor
+from logger.extras import capture_prints
 import requests
 import logger.extras.dependency as dependency_mod
 import logger.extras.network as network_mod
@@ -98,6 +99,17 @@ def test_network_monitor_connection_error(monkeypatch):
     assert result['type'] == 'ConnectionError'
     metrics = nm.metrics['example.com']
     assert metrics['total_errors'] == 1
+
+
+def test_network_monitor_generic_exception(monkeypatch):
+    nm = NetworkMonitor()
+
+    def fake_get(url, timeout=1.0):
+        raise RuntimeError('boom')
+
+    monkeypatch.setattr(network_mod.requests, 'get', fake_get)
+    result = nm.measure_latency('http://example.com')
+    assert result['type'] == 'Exception'
 
 
 def test_logger_check_connectivity_and_metrics(tmp_path, caplog, monkeypatch):
@@ -220,3 +232,18 @@ def test_memory_leak_watch_object(tmp_path, caplog):
         logger.end()
 
     assert any('X:' in r.message for r in caplog.records)
+
+
+def test_capture_prints_restores_on_exception(tmp_path):
+    logger = start_logger('print', log_dir=str(tmp_path), console_level='CRITICAL', capture_prints=False)
+    logger.capture_prints(False)
+    import builtins
+    original = builtins.print
+    try:
+        with capture_prints(logger):
+            assert builtins.print is not original
+            raise RuntimeError('boom')
+    except RuntimeError:
+        pass
+    assert builtins.print is original
+    logger.end()
