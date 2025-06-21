@@ -2,21 +2,39 @@
 
 ![CI](https://github.com/Elian-Abrao/Logger/actions/workflows/ci.yml/badge.svg)
 
-Biblioteca de logging estruturado. Veja `main.py` para um exemplo completo.
+Biblioteca em Python para logging estruturado com métricas, profiling e barra de progresso.
+
+## Sumário
+- [Visão Geral](#visão-geral)
+- [Instalação](#instalação)
+- [Uso Básico](#uso-básico)
+- [Documentação](#documentação)
+- [Contribuição](#contribuição)
+
+## Visão Geral
+O pacote oferece uma forma simples de iniciar um `logging.Logger` enriquecido com:
+- Formatação colorida com emojis
+- Logs de arquivo e console separados
+- Monitoração de CPU/Memória e detecção de vazamentos
+- Funções utilitárias como `timer`, `progress` e captura de prints
+
+### Diagrama Resumido
+```mermaid
+graph TD
+    App --> L[start_logger]
+    L --> H[Handlers]
+    H --> Console
+    H --> Arquivos
+    L --> Extras
+```
 
 ## Instalação
-
-Com o Python instalado, instale o pacote e suas dependências em modo de
-desenvolvimento:
-
 ```bash
 pip install -e .[dev]
 ```
+Ou utilize `requirements.lock` para reproduzir o ambiente.
 
-## Uso básico
-
-Crie uma instância do logger chamando `start_logger`:
-
+## Uso Básico
 ```python
 from logger import start_logger
 
@@ -24,61 +42,11 @@ logger = start_logger("Demo")
 logger.info("Processo iniciado")
 ```
 
-O método ``logger.end()`` é chamado automaticamente ao término do programa, mas pode ser invocado manualmente caso deseje encerrar o logger antecipadamente. Ao finalizar, um banner de resumo exibe métricas.
-O detalhamento completo do profiling, com cadeia de chamadas e tempos, é registrado apenas nos arquivos de log.
-
-
-Para mais exemplos consulte `main.py`.
-
-## Testes e qualidade de código
-
-Instale as dependências do projeto com:
-
-```bash
-pip install -e .[dev]
-```
-
-Para reproduzir exatamente o ambiente utilizado, instale a partir do arquivo
-`requirements.lock` gerado via `pip freeze`:
-
-```bash
-pip install -r requirements.lock
-```
-
-Sempre que atualizar as dependências, execute:
-
-```bash
-pip freeze > requirements.lock
-```
-para sincronizar o arquivo de lock.
-
-Com as dependências instaladas, execute as ferramentas de verificação:
-
-```bash
-ruff check .
-mypy .
-pytest --cov=logger
-bandit -r logger
-safety check -r requirements.lock || true
-```
-
 ## Documentação
-
-A documentação completa é gerada com **Sphinx** e publicada automaticamente no
-GitHub Pages. Para gerar a versão local instale o Sphinx e execute:
-
-```bash
-pip install sphinx
-```
-
+Guias completos estão em [docs/](docs/). Para gerar a versão HTML local:
 ```bash
 make -C docs html
 ```
 
-Para gerar os pacotes de distribuição execute:
-
-```bash
-python -m build
-```
-
-Os arquivos HTML serão gerados em `docs/build/html`.
+## Contribuição
+Siga o fluxo descrito em [docs/developer_guide.md](docs/developer_guide.md).
