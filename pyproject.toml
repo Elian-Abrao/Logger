@@ -10,6 +10,13 @@ readme = "README.md"
 authors = [{name = "Elian Abrão"}]
 license = {file = "LICENSE"}
 requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+keywords = ["logging", "structured", "console"]
+urls = {homepage = "https://github.com/Elian-Abrao/Logger", repository = "https://github.com/Elian-Abrao/Logger"}
 dependencies = [
     "colorama",
     "psutil",
