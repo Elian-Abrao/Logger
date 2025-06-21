@@ -1,7 +1,7 @@
 """network.py - Monitoramento de conexoes e requisicoes."""
 
 from typing import Dict, Any, Tuple, Optional
-from logging import Logger
+from logging import Logger, getLogger
 from .dependency import DependencyManager, logger_log_environment
 from urllib.parse import urlparse
 from concurrent.futures import ThreadPoolExecutor
@@ -13,7 +13,9 @@ import requests
 from .progress import format_block
 
 class NetworkMonitor:
-    def __init__(self):
+    def __init__(self, timeout: float = 1.0, logger: Logger | None = None):
+        self.timeout = timeout
+        self.logger = logger or getLogger(__name__)
         self.metrics: Dict[str, Dict[str, Any]] = defaultdict(lambda: {
             'total_requests': 0,
             'total_errors': 0,
@@ -22,7 +24,13 @@ class NetworkMonitor:
         })
         self._executor = ThreadPoolExecutor(max_workers=5)
 
-    def check_connection(self, host: str = "8.8.8.8", port: int = 53, timeout: float = 1.0) -> Tuple[bool, Optional[float]]:
+    def _validate_url(self, url: str) -> None:
+        parsed = urlparse(url)
+        if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+            raise ValueError(f"URL inválida: {url}")
+
+    def check_connection(self, host: str = "8.8.8.8", port: int = 53, timeout: float | None = None) -> Tuple[bool, Optional[float]]:
+        timeout = timeout if timeout is not None else self.timeout
         try:
             start = time.time()
             socket.create_connection((host, port), timeout=timeout)
@@ -30,7 +38,9 @@ class NetworkMonitor:
         except OSError:
             return False, None
 
-    def measure_latency(self, url: str, timeout: float = 1.0) -> Dict[str, Any]:
+    def measure_latency(self, url: str, timeout: float | None = None) -> Dict[str, Any]:
+        self._validate_url(url)
+        timeout = timeout if timeout is not None else self.timeout
         try:
             start = time.time()
             response = requests.get(url, timeout=timeout)
@@ -45,10 +55,21 @@ class NetworkMonitor:
                 'status_code': response.status_code,
                 'content_size': len(response.content),
             }
-        except requests.RequestException as e:
+        except requests.exceptions.Timeout as exc:
             domain = urlparse(url).netloc
             self.metrics[domain]['total_errors'] += 1
-            return {'error': str(e), 'type': type(e).__name__}
+            self.logger.error(f"Timeout ao acessar {url}: {exc}")
+            return {'error': str(exc), 'type': 'Timeout'}
+        except requests.exceptions.ConnectionError as exc:
+            domain = urlparse(url).netloc
+            self.metrics[domain]['total_errors'] += 1
+            self.logger.error(f"Erro de conexão ao acessar {url}: {exc}")
+            return {'error': str(exc), 'type': 'ConnectionError'}
+        except requests.RequestException as exc:
+            domain = urlparse(url).netloc
+            self.metrics[domain]['total_errors'] += 1
+            self.logger.error(f"Erro ao acessar {url}: {exc}")
+            return {'error': str(exc), 'type': type(exc).__name__}
 
 def logger_check_connectivity(
     self: Logger,

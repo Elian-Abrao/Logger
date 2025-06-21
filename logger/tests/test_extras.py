@@ -5,6 +5,7 @@ from types import SimpleNamespace
 from logger import start_logger
 from logger.extras.dependency import DependencyManager
 from logger.extras.network import NetworkMonitor
+import requests
 import logger.extras.dependency as dependency_mod
 import logger.extras.network as network_mod
 import logger.extras.metrics as metrics
@@ -83,6 +84,20 @@ def test_network_monitor_measure_latency(monkeypatch):
     assert metrics['total_requests'] == 1
     assert metrics['total_bytes'] == 2
     assert metrics['latencies'] == [50]
+
+
+def test_network_monitor_connection_error(monkeypatch):
+    nm = NetworkMonitor()
+
+    def fake_get(url, timeout=1.0):
+        raise requests.exceptions.ConnectionError("fail")
+
+    monkeypatch.setattr(network_mod.requests, 'get', fake_get)
+
+    result = nm.measure_latency('http://example.com')
+    assert result['type'] == 'ConnectionError'
+    metrics = nm.metrics['example.com']
+    assert metrics['total_errors'] == 1
 
 
 def test_logger_check_connectivity_and_metrics(tmp_path, caplog, monkeypatch):
