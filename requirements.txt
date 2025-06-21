@@ -1,13 +1,13 @@
-colorama
-psutil
-requests
-wcwidth
-setuptools
+colorama>=0.4,<0.5
+psutil>=5.9,<8
+requests>=2.31,<3
+wcwidth>=0.2,<0.3
+setuptools>=68,<81
 # typing stubs
-types-colorama
-types-psutil
-types-requests
-types-PyAutoGUI
-types-setuptools
+types-colorama>=0.4,<0.5
+types-psutil>=6,<8
+types-requests>=2.31,<3
+types-PyAutoGUI>=0.9,<1.0
+types-setuptools>=80,<81
 # optional dependencies
-pyautogui
+pyautogui>=0.9,<1.0

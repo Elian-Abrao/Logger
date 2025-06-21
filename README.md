@@ -44,6 +44,21 @@ Ou, se preferir, utilize o arquivo de requisitos:
 pip install -r requirements.txt
 ```
 
+Para reproduzir exatamente o ambiente utilizado, instale a partir do arquivo
+`requirements.lock` gerado via `pip freeze`:
+
+```bash
+pip install -r requirements.lock
+```
+
+Sempre que atualizar as dependências, execute:
+
+```bash
+pip install -r requirements.txt
+pip freeze > requirements.lock
+```
+para sincronizar o arquivo de lock.
+
 Com as dependências instaladas, execute as ferramentas de verificação:
 
 ```bash
