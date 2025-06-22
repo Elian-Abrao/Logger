@@ -50,3 +50,13 @@ make -C docs html
 
 ## Contribuição
 Siga o fluxo descrito em [docs/developer_guide.md](docs/developer_guide.md).
+
+## Publicacao no Azure
+Para publicar no feed privado `Logger-Seed`, gere os artefatos com:
+```bash
+python -m build --no-isolation
+```
+Em seguida, envie usando o `twine` configurado no `.pypirc`:
+```bash
+twine upload --repository Logger-Seed dist/*
+```

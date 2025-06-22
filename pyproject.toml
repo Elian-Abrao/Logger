@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "logger"
 version = "0.1.0"
-description = "Structured logging utilities"
+description = "Biblioteca para geração de logs estruturados com formatação colorida, arquivos separados e monitoramento de CPU/Memória. Inclui recursos de profiling, barra de progresso e captura de prints."
 readme = "README.md"
 authors = [{name = "Elian Abrão"}]
 license = {file = "LICENSE"}
@@ -16,7 +16,7 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 keywords = ["logging", "structured", "console"]
-urls = {homepage = "https://github.com/Elian-Abrao/Logger", repository = "https://github.com/Elian-Abrao/Logger"}
+urls = {homepage = "https://dev.azure.com/qualysystem/RPA/_git/Logger_Module", repository = "https://dev.azure.com/qualysystem/RPA/_git/Logger_Module"}
 dependencies = [
     "colorama>=0.4,<0.5",
     "psutil>=5.9,<8",
