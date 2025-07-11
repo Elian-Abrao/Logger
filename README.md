@@ -41,6 +41,8 @@ from logger import start_logger
 logger = start_logger("Demo")
 logger.info("Processo iniciado")
 ```
+Use `show_profiling=True` em `start_logger` para exibir o resumo de
+profiling no encerramento.
 
 ## Documentação
 Guias completos estão em [docs/](docs/). Para gerar a versão HTML local:
