@@ -51,6 +51,7 @@ def start_logger(
     capture_prints: bool = True,
     verbose: int = 0,
     *,
+    show_profiling: bool = False,
     show_all_leaks: bool = False,
     watch_objects: Iterable[str] | None = None,
 ) -> Logger:
@@ -71,6 +72,9 @@ def start_logger(
     watch_objects:
         Lista de tipos de objetos para acompanhar sempre na verificação de
         vazamento de memória.
+
+    show_profiling:
+        Define se o resumo de profiling será exibido ao final da execução.
     """
     logger = _configure_base_logger(
         name, log_dir, console_level, file_level, verbose
@@ -80,13 +84,14 @@ def start_logger(
     _setup_context_and_profiling(logger)
     _setup_dependencies_and_network(logger)
     _setup_lifecycle(logger)
+    setattr(logger, "_show_profiling", show_profiling)
     setattr(logger, "_leak_show_all", show_all_leaks)
     setattr(logger, "_leak_watch", set(watch_objects or []))
     setattr(logger, "_leak_threshold_mb", 5.0)
     if capture_prints:
         logger.capture_prints(True)  # type: ignore[attr-defined]
     logger.memory_snapshot()  # type: ignore[attr-defined]
-    logger.start()  # type: ignore[attr-defined]
+    logger.start(show_profiling=show_profiling)  # type: ignore[attr-defined]
     return logger
 
 

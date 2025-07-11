@@ -1,6 +1,7 @@
 """Testes unitários para o pacote ``logger``"""
 
 from pathlib import Path
+import logging
 
 from logger import start_logger
 
@@ -36,3 +37,17 @@ def test_progress_bar_usage(tmp_path):
     assert getattr(logger, "_active_pbar", None) is None
 
     logger.end()
+
+
+def test_profiling_hidden_by_default(tmp_path, caplog):
+    logger = start_logger('prof0', log_dir=str(tmp_path), console_level='INFO')
+    with caplog.at_level(logging.INFO):
+        logger.end()
+    assert not any('PROFILING' in r.message for r in caplog.records)
+
+
+def test_profiling_enabled(tmp_path, caplog):
+    logger = start_logger('prof1', log_dir=str(tmp_path), console_level='INFO', show_profiling=True)
+    with caplog.at_level(logging.INFO):
+        logger.end()
+    assert any('PROFILING' in r.message for r in caplog.records)

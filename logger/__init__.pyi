@@ -53,11 +53,11 @@ class StructuredLogger(Logger):
 
     def capture_prints(self, active: bool = True, level: str = "INFO", prefix: str = ...) -> None: ...
 
-    def start(self, verbose: int = 1) -> None:
+    def start(self, verbose: int = 1, *, show_profiling: bool | None = None) -> None:
         """Exibe informações de início de execução."""
         ...
 
-    def end(self, verbose: int = 1) -> None:
+    def end(self, verbose: int = 1, *, show_profiling: bool | None = None) -> None:
         """Exibe informações de encerramento de execução."""
         ...
 
@@ -142,6 +142,7 @@ def start_logger(
     capture_prints: bool = True,
     verbose: int = 0,
     *,
+    show_profiling: bool = False,
     show_all_leaks: bool = False,
     watch_objects: Iterable[str] | None = None,
 ) -> StructuredLogger:

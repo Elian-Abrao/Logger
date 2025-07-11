@@ -12,7 +12,12 @@ from .progress import format_block, combine_blocks
 __all__ = ["logger_log_start", "logger_log_end", "_setup_lifecycle"]
 
 
-def logger_log_start(self: Logger, verbose: int = 1) -> None:
+def logger_log_start(
+    self: Logger,
+    verbose: int = 1,
+    *,
+    show_profiling: bool | None = None,
+) -> None:
     """Exibe informações de início de execução."""
     folder = Path(os.getcwd()).name
     script = Path(sys.argv[0]).name
@@ -28,9 +33,13 @@ def logger_log_start(self: Logger, verbose: int = 1) -> None:
     banner = format_block("INÍCIO", lines)
     blocks = [banner]
 
+    if show_profiling is None:
+        show_profiling = getattr(self, "_show_profiling", False)
+
     if verbose >= 1:
         self.reset_metrics()  # type: ignore[attr-defined]
-        self._profiler.start()  # type: ignore[attr-defined]
+        if show_profiling:
+            self._profiler.start()  # type: ignore[attr-defined]
         status = self.log_system_status(return_block=True)  # type: ignore[attr-defined]
         env = self.log_environment(return_block=True)  # type: ignore[attr-defined]
         conn = self.check_connectivity(return_block=True)  # type: ignore[attr-defined]
@@ -44,7 +53,12 @@ def logger_log_start(self: Logger, verbose: int = 1) -> None:
     self.success(f"\n{banner_final}", extra={"plain": True})  # type: ignore[attr-defined]
 
 
-def logger_log_end(self: Logger, verbose: int = 1) -> None:
+def logger_log_end(
+    self: Logger,
+    verbose: int = 1,
+    *,
+    show_profiling: bool | None = None,
+) -> None:
     """Exibe informações de encerramento de execução."""
     folder = Path(os.getcwd()).name
     script = Path(sys.argv[0]).name
@@ -52,13 +66,16 @@ def logger_log_end(self: Logger, verbose: int = 1) -> None:
     data = now.strftime("%d/%m/%Y")
     hora = now.strftime("%H:%M:%S")
 
+    if show_profiling is None:
+        show_profiling = getattr(self, "_show_profiling", False)
+
     leak_block: str | None = None
     if verbose >= 2:
         self.report_metrics()  # type: ignore[attr-defined]
         self.debug("Verificando possíveis vazamentos de memória...")
     leak_block = self.check_memory_leak(return_block=True)  # type: ignore[attr-defined]
     profile_summary: str | None = None
-    if verbose >= 1:
+    if verbose >= 1 and show_profiling:
         self.profile_report()  # type: ignore[attr-defined]
         summary_lines = self._profiler.get_report_lines(3)  # type: ignore[attr-defined]
         if summary_lines:
@@ -94,11 +111,13 @@ def _setup_lifecycle(logger: Logger) -> None:
 
     # Flag para evitar múltiplas execuções de ``end``
     setattr(logger, "_end_called", False)
+    # Controle padrão de exibição de profiling
+    setattr(logger, "_show_profiling", False)
 
     def _auto_end() -> None:
         if not getattr(logger, "_end_called", False):
             try:
-                logger.end()  # type: ignore[attr-defined]
+                logger.end(show_profiling=getattr(logger, "_show_profiling", False))  # type: ignore[attr-defined]
             except Exception:
                 pass
 
